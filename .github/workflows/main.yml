@@ -17,12 +17,15 @@ jobs:
     steps:
       - name: Deploy Backend to VPS
         uses: appleboy/ssh-action@v1
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           command_timeout: 20m
+          envs: DATABASE_URL
           script: |
             set -e
 
