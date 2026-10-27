@@ -1,0 +1,63 @@
+
+name: Deploy Gomoxie Backend
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: gomoxie-backend-production
+  cancel-in-progress: false
+
+jobs:
+  deploy_production:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Backend to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          command_timeout: 20m
+          script: |
+            set -e
+
+            echo "Starting Gomoxie backend deployment..."
+
+            mkdir -p ~/apps/resume-back
+            cd ~/apps/resume-back
+
+            # Pull latest code
+            if [ -d ".git" ]; then
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone -b main https://github.com/yonathanth/resume-back.git .
+            fi
+
+            # Install dependencies
+            npm ci
+
+            # Generate Prisma client
+            npx prisma generate
+
+            # Build backend
+            npm run build
+
+            # Apply database migrations
+            npm run migrate:deploy
+
+            # Start or restart PM2
+            if pm2 describe gomoxie-backend > /dev/null 2>&1; then
+              pm2 restart gomoxie-backend --update-env
+            else
+              PORT=4030 pm2 start npm --name "gomoxie-backend" -- run start
+            fi
+
+            pm2 save
+
+            echo "Gomoxie backend deployed successfully!"
