@@ -39,6 +39,13 @@ jobs:
               git clone -b main https://github.com/yonathanth/resume-back.git .
             fi
 
+            # The server's .env (not in git) was first written for gomoxie.com; the domain is gomoxie.app.
+            # Only acts while a .com address is left in it, so later deploys skip it.
+            if [ -f .env ] && grep -q "gomoxie\.com" .env; then
+              sed -i 's/gomoxie\.com/gomoxie.app/g' .env
+              echo "Fixed .env: gomoxie.com -> gomoxie.app"
+            fi
+
             # Install dependencies
             npm ci
 
