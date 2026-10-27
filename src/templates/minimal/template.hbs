@@ -1,0 +1,22 @@
+{{!-- "Minimal" — after Jake's Resume: centered small-caps name, one line of contacts, ruled small-caps sections. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      {{#if contacts.length}}
+        <p class="contact-line">
+          {{#each contacts}}<span class="contact-item">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/each}}
+        </p>
+      {{/if}}
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

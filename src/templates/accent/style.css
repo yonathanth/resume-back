@@ -1,0 +1,224 @@
+/* "Accent" — after AltaCV: Lato, vivid purple headings, grey body, tag chips in the sidebar. */
+
+:root {
+  --accent: #3e0097;
+  --emphasis: #2e2e2e;
+  --body: #555;
+}
+
+@page {
+  size: A4;
+  margin: 1cm 1.1cm 1.3cm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 1cm 1.1cm 1.3cm;
+}
+
+body {
+  font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.38;
+  color: var(--body);
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 16pt;
+  margin-bottom: 14pt;
+}
+
+.photo {
+  width: 2.5cm;
+  height: 2.5cm;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+h1 {
+  color: #000;
+  font-size: 24pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.tagline {
+  color: var(--accent);
+  font-size: 12pt;
+  font-weight: 700;
+  margin: 2pt 0 6pt;
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt 14pt;
+  font-size: 8.5pt;
+}
+
+.c-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32%;
+  column-gap: 1cm;
+}
+
+.cv-section {
+  margin-bottom: 12pt;
+}
+
+.section-title {
+  color: var(--accent);
+  font-size: 13pt;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 1.2pt solid var(--accent);
+  padding-bottom: 1pt;
+  margin-bottom: 6pt;
+}
+
+/* Entries stack: title, organization in accent, then date · location. */
+.entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0;
+}
+
+.e-title {
+  order: 1;
+  width: 100%;
+  color: var(--emphasis);
+  font-size: 10.5pt;
+}
+
+.e-sub {
+  order: 2;
+  width: 100%;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.e-date,
+.e-loc {
+  order: 3;
+  font-size: 8.5pt;
+  text-align: left;
+}
+
+.e-loc {
+  order: 4;
+}
+
+.e-date ~ .e-loc::before {
+  content: "\00a0·\00a0";
+}
+
+.e-meta {
+  order: 5;
+  width: 100%;
+  font-size: 8.5pt;
+  font-style: italic;
+}
+
+.entry {
+  margin-bottom: 6pt;
+  padding-bottom: 6pt;
+  border-bottom: 0.8pt dashed #ccc;
+}
+
+.entry:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.bullets {
+  margin-top: 3pt;
+  padding-left: 12pt;
+  font-size: 9pt;
+}
+
+/* Sidebar: skills and interests as outlined chips. */
+.side .s-cat {
+  display: block;
+  color: var(--emphasis);
+  font-weight: 700;
+  margin: 4pt 0 3pt;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items,
+.side .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4pt;
+}
+
+.side .s-item,
+.side .tag {
+  display: inline-block;
+  border: 0.8pt solid var(--accent);
+  border-radius: 3pt;
+  padding: 1pt 5pt;
+  color: var(--emphasis);
+  font-size: 8.5pt;
+}
+
+.side .s-item + .s-item::before,
+.side .tag + .tag::before {
+  content: none;
+}
+
+.lang {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 5pt;
+}
+
+.l-name {
+  color: var(--emphasis);
+  font-weight: 700;
+}
+
+.lang .l-level {
+  font-size: 8.5pt;
+}
+
+.lang .l-level::before {
+  content: "";
+}
+
+.l-bar {
+  display: block;
+  grid-column: 1 / -1;
+  height: 4pt;
+  margin-top: 2pt;
+  background: #e8e0f3;
+  border-radius: 2pt;
+}
+
+.l-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2pt;
+}
+
+.side .is-compact .entry {
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin-bottom: 5pt;
+}

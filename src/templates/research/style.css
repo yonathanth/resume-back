@@ -1,0 +1,92 @@
+/* "Research" — after the Undergraduate Complexity Research CV: Baskerville, italic section rules. */
+
+@page {
+  size: A4;
+  margin: 0.8in 0.9in;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 0.8in 0.9in;
+}
+
+body {
+  font-family: "Libre Baskerville", Baskerville, Georgia, serif;
+  font-size: 9.5pt;
+  line-height: 1.35;
+}
+
+.cv-header {
+  margin-bottom: 8pt;
+}
+
+h1 {
+  text-align: center;
+  font-size: 19pt;
+  font-weight: 400;
+}
+
+.head-cols {
+  display: flex;
+  justify-content: space-between;
+  gap: 20pt;
+  margin-top: 6pt;
+  font-size: 10pt;
+}
+
+.head-right {
+  text-align: right;
+}
+
+.cv-section {
+  margin-top: 10pt;
+}
+
+.section-title {
+  font-size: 11.5pt;
+  font-weight: 400;
+  font-style: italic;
+  border-bottom: 0.6pt solid #000;
+  padding-bottom: 1pt;
+  margin-bottom: 5pt;
+}
+
+.section-body {
+  padding-left: 0.15in;
+}
+
+.entry {
+  margin-bottom: 5pt;
+}
+
+.e-sub,
+.e-loc,
+.e-meta {
+  font-size: 8.5pt;
+  font-style: italic;
+}
+
+.e-date {
+  font-size: 9pt;
+}
+
+.bullets {
+  margin-top: 2pt;
+  font-size: 8.5pt;
+}
+
+.e-desc {
+  font-size: 8.5pt;
+}
+
+.s-cat {
+  font-weight: 700;
+}
+
+.skill-group {
+  margin-bottom: 1pt;
+}
+
+.is-compact .entry {
+  margin-bottom: 3pt;
+}

@@ -1,0 +1,145 @@
+/*
+ * "Prose" — the 11pt article CV with newtx Times (Tinos here, metric-
+ * compatible), 0.8in margins, \linespread{1.1} and parskip paragraphs.
+ * linkcolour is rgb(0, .2, .6); links use linkcolour!90. Section titles are
+ * \large, black, unbolded, with a 0.7pt rule underneath.
+ */
+
+:root {
+  --linkcolour: #003399;
+  --link: #1a47a3; /* linkcolour!90 */
+  --parskip: 6.5pt;
+}
+
+@page {
+  size: A4;
+  margin: 0.8in;
+}
+
+/* The original's title minipage (\vspace{7ex} then -0.9in) lifts the name
+   into the top margin, so the first page starts higher. */
+@page :first {
+  margin-top: 0.5in;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 0.5in 0.8in 0.8in;
+}
+
+body {
+  font-family: "Tinos", "Times New Roman", Times, serif;
+  font-size: 11pt;
+  line-height: 1.4;
+  color: #000;
+}
+
+.link {
+  color: var(--link);
+}
+
+/* ---- header ---- */
+.cv-header {
+  text-align: center;
+}
+
+h1 {
+  font-size: 14.4pt; /* \Large */
+  font-weight: 400;
+  color: var(--linkcolour);
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.headline {
+  margin-top: 2pt;
+}
+
+/* \begin{center} … \,$\cdot$\, … */
+.contact-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 13pt;
+}
+
+.c-item + .c-item::before {
+  content: "·";
+  margin: 0 0.45em;
+  color: #000;
+}
+
+.intro {
+  margin-top: var(--parskip);
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* ---- sections (\sectitle) ---- */
+.cv-section {
+  margin-top: 13pt;
+}
+
+.sectitle {
+  font-size: 12pt; /* \large */
+  font-weight: 400;
+  line-height: 1.25;
+  padding-bottom: 1.5pt;
+  border-bottom: 0.7pt solid #000;
+  break-after: avoid;
+}
+
+.section-body {
+  padding-top: 1pt;
+}
+
+.item,
+.entry {
+  margin-top: var(--parskip);
+  text-align: justify;
+  hyphens: auto;
+}
+
+.entry .item {
+  margin-top: 2pt;
+}
+
+.entry {
+  break-inside: avoid;
+}
+
+/* \textBF: the label in linkcolour, not bold. */
+.label {
+  color: var(--linkcolour);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12pt;
+  text-align: left;
+}
+
+.entry > .head {
+  margin-top: 0;
+}
+
+.date {
+  white-space: nowrap;
+}
+
+.meta {
+  font-style: italic;
+}
+
+.bullets {
+  margin-top: 2pt;
+  padding-left: 1.4em;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.bullets li + li {
+  margin-top: 1pt;
+}

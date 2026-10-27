@@ -1,0 +1,25 @@
+{{!-- "Accent" — after AltaCV: round photo, tagline and icon contacts across the top, main column + sidebar. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      {{#if photo}}<img class="photo" src="{{photo}}" alt="" />{{/if}}
+      <div class="identity">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="tagline">{{personal.title}}</p>{{/if}}
+        {{> cv-contacts}}
+      </div>
+    </header>
+    <div class="columns">
+      <div class="main">{{#each mainSections}}{{> section}}{{/each}}</div>
+      <aside class="side">{{#each sidebarSections}}{{> section}}{{/each}}</aside>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,226 @@
+/*
+ * "Curve" — after LianTze Lim's CurVe CV: 11pt Cochineal (Crimson Text here),
+ * Cabin for the name and rubric heads, Inconsolata (zi4) for emails and URLs.
+ * Rubric heads sit on a 2.5pt swish fading from SwishLineColour!60!white to
+ * white; markers and icons are MarkerColour!80!black. Sizes follow LaTeX's
+ * 11pt scale (\Large 14.4pt, \LARGE 17.28pt) and \arraystretch 1.25.
+ */
+
+:root {
+  --swish: #b8cd6d; /* #88AC0B at 60% on white */
+  --marker: #920632; /* #B6073F at 80% on black */
+}
+
+@page {
+  size: A4;
+  margin: 2cm 2.25cm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 2cm 2.25cm;
+}
+
+body {
+  font-family: "Crimson Text", "Cochineal", Georgia, serif;
+  font-size: 11pt;
+  line-height: 1.24;
+}
+
+strong {
+  font-weight: 700;
+}
+
+.tt,
+.f-email .f-text,
+.f-link .f-text {
+  font-family: "Inconsolata", "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+/* ---- header (\leftheader + \photo[r]) ---- */
+.cv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16pt;
+}
+
+.identity {
+  flex: 1;
+  min-width: 0;
+}
+
+h1 {
+  font-family: "Cabin", "Helvetica Neue", Arial, sans-serif;
+  font-size: 17.28pt;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.headline {
+  margin-top: 1pt;
+  font-style: italic;
+}
+
+.fields {
+  list-style: none;
+  margin-top: 5pt;
+  line-height: 1.5;
+}
+
+/* \makefield: a 1.5em icon box, the field, then \hspace{2em}. */
+.field {
+  display: inline-flex;
+  align-items: baseline;
+  margin-right: 2em;
+  white-space: nowrap;
+}
+
+.f-icon {
+  width: 1.5em;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--marker);
+}
+
+.f-icon .icon {
+  width: 0.95em;
+  height: 0.95em;
+  vertical-align: -0.12em;
+}
+
+.photo {
+  width: 2.6cm;
+  height: 3.2cm;
+  object-fit: cover;
+}
+
+/* \title, centered under the headers by \makeheaders[c]. */
+.doc-title {
+  margin-top: 10pt;
+  text-align: center;
+  font-family: "Cabin", "Helvetica Neue", Arial, sans-serif;
+  font-size: 17.28pt;
+  font-weight: 700;
+}
+
+/* ---- rubrics ---- */
+.rubric {
+  margin-top: 13.6pt; /* \vskip\baselineskip */
+}
+
+.rubric-head {
+  font-family: "Cabin", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14.4pt;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0 0 1pt 1pt;
+  margin-bottom: 2pt;
+  background: linear-gradient(to right, var(--swish), #fff) left bottom / 100% 2.5pt no-repeat;
+  break-after: avoid;
+}
+
+/* One table per rubric. CurVe sizes the key column per rubric; a fixed
+   width keeps the dates aligned down the page instead (longer keys wrap). */
+.rubric-body {
+  display: grid;
+  grid-template-columns: 3.3cm minmax(0, 1fr);
+  column-gap: 12pt;
+}
+
+.row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  padding-top: 3.4pt; /* \arraystretch 1.25 */
+  break-inside: avoid;
+}
+
+.key {
+  text-align: right;
+}
+
+.marker {
+  color: var(--marker);
+}
+
+.marker .icon {
+  width: 0.8em;
+  height: 0.8em;
+  fill: currentColor;
+  vertical-align: -0.05em;
+}
+
+/* A rubric of plain text (the profile) spans both columns. */
+.row.text-row {
+  grid-template-columns: 1fr;
+}
+
+.row.text-row .body {
+  grid-column: 1 / -1;
+}
+
+.body.text,
+.desc {
+  text-align: justify;
+  hyphens: auto;
+}
+
+.meta {
+  font-style: italic;
+}
+
+.bullets {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1pt;
+}
+
+.bullets li {
+  position: relative;
+  padding-left: 1em;
+}
+
+.bullets li::before {
+  content: "•";
+  position: absolute;
+  left: 0.15em;
+  color: var(--marker);
+}
+
+/* Publications: [n] in the key column. */
+.rubric-body {
+  counter-reset: pub;
+}
+
+.pub {
+  counter-increment: pub;
+}
+
+.pub-num::before {
+  content: "[" counter(pub) "]";
+}
+
+/* Referees side by side, as in the original's referee rubric. */
+.referees {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6pt 18pt;
+  padding-top: 3.4pt;
+}
+
+.referee {
+  break-inside: avoid;
+}
+
+.referee .rel {
+  font-style: italic;
+}
+
+/* The bibliography's numbers sit in a narrow column of their own. */
+.cv-publications .rubric-body {
+  grid-template-columns: 2.4em minmax(0, 1fr);
+  column-gap: 6pt;
+}

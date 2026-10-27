@@ -1,0 +1,7 @@
+{{#if bullets.length}}
+  <ul class="bullets">
+    {{#each bullets}}
+      <li>{{#if label}}<strong class="b-label">{{label}}:</strong> {{/if}}{{text}}</li>
+    {{/each}}
+  </ul>
+{{/if}}

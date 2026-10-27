@@ -1,0 +1,34 @@
+{{!--
+  "Sidebar" — after Philip Empl's CV: a slanted heading bar, photo and personal
+  facts in a light left column, dated experience on the right.
+--}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}CV</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <div class="topbar"><span>CV</span></div>
+    <div class="columns">
+      <aside class="side">
+        {{#if photo}}<img class="photo" src="{{photo}}" alt="" />{{/if}}
+        <div class="identity">
+          <h1>{{personal.full_name}}</h1>
+          {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        </div>
+        {{#each sidebarSections}}{{> section}}{{/each}}
+        {{#if contacts.length}}
+          <section class="cv-section cv-contact">
+            <h2 class="section-title"><span class="section-label">Contact</span></h2>
+            {{> cv-contacts}}
+          </section>
+        {{/if}}
+      </aside>
+      <div class="main">{{#each mainSections}}{{> section}}{{/each}}</div>
+    </div>
+  </main>
+</body>
+</html>

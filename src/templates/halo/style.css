@@ -1,0 +1,227 @@
+/* "Halo" — after ReCeiVe: Roboto, a header band with a round photo, grey sidebar, orange highlight. */
+
+:root {
+  --highlight: #eb9534;
+  --band: #2f3542;
+  --panel: #f3f3f3;
+  --muted: #6b6b6b;
+}
+
+/* Full-bleed header band and sidebar, so the page has no printer margin. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.4;
+  color: #333;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 297mm;
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 16pt;
+  padding: 10mm 12mm 8mm;
+  background: var(--band);
+  color: #fff;
+  border-bottom: 3pt solid var(--highlight);
+}
+
+.photo {
+  width: 2.6cm;
+  height: 2.6cm;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5pt solid #fff;
+}
+
+h1 {
+  font-size: 24pt;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.last {
+  font-weight: 700;
+}
+
+.headline {
+  margin-top: 3pt;
+  color: var(--highlight);
+  font-size: 10pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cv-header .contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt 12pt;
+  margin-top: 6pt;
+  font-size: 8.5pt;
+}
+
+.cv-header .c-icon {
+  display: inline-flex;
+  color: var(--highlight);
+}
+
+.columns {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 31% minmax(0, 1fr);
+}
+
+.side {
+  background: var(--panel);
+  padding: 8mm 7mm 10mm 12mm;
+}
+
+.main {
+  padding: 8mm 12mm 10mm 8mm;
+}
+
+.cv-section {
+  margin-bottom: 12pt;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6pt;
+  font-size: 10.5pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--band);
+  margin-bottom: 6pt;
+}
+
+.section-title::before {
+  content: "";
+  width: 14pt;
+  height: 3pt;
+  background: var(--highlight);
+}
+
+.e-title {
+  color: #111;
+}
+
+.e-date {
+  color: var(--highlight);
+  font-weight: 700;
+  font-size: 8.5pt;
+}
+
+.e-sub,
+.e-loc,
+.e-meta {
+  color: var(--muted);
+}
+
+.e-sub {
+  font-style: italic;
+}
+
+.main .entry {
+  margin-bottom: 9pt;
+}
+
+.bullets {
+  margin-top: 2pt;
+  padding-left: 12pt;
+}
+
+/* Sidebar */
+.side .cv-text {
+  color: #444;
+}
+
+.side .s-cat {
+  display: block;
+  font-weight: 700;
+  margin-top: 4pt;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items,
+.side .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt;
+  margin-top: 2pt;
+}
+
+.side .s-item,
+.side .tag {
+  display: inline-block;
+  background: #fff;
+  border-radius: 2pt;
+  padding: 1pt 5pt;
+  font-size: 8.3pt;
+}
+
+.side .s-item + .s-item::before,
+.side .tag + .tag::before {
+  content: none;
+}
+
+.lang {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 5pt;
+}
+
+.l-name {
+  font-weight: 700;
+}
+
+.lang .l-level {
+  color: var(--muted);
+  font-size: 8.3pt;
+}
+
+.lang .l-level::before {
+  content: "";
+}
+
+.l-bar {
+  display: block;
+  grid-column: 1 / -1;
+  height: 4pt;
+  margin-top: 2pt;
+  background: #dedede;
+  border-radius: 2pt;
+}
+
+.l-fill {
+  display: block;
+  height: 100%;
+  background: var(--highlight);
+  border-radius: 2pt;
+}
+
+.side .entry-head {
+  display: block;
+}
+
+.side .e-date {
+  text-align: left;
+}
+
+.side .entry {
+  margin-bottom: 6pt;
+}

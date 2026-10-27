@@ -1,0 +1,27 @@
+{{!-- "Scholar" — an academic CV: optional round photo and a rule beside the name block, Palatino type. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Curriculum Vitae</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header{{#if photo}} with-photo{{/if}}">
+      {{#if photo}}
+        <img class="photo" src="{{photo}}" alt="" />
+        <span class="divider"></span>
+      {{/if}}
+      <div class="identity">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        <ul class="id-contacts">
+          {{#each contacts}}<li>{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</li>{{/each}}
+        </ul>
+      </div>
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{{!--
+  "Formal" — navy name, tagged personal information under it, table-style
+  skills and languages. Personal details are registered as this template's
+  "sidebar" section so they can be placed in the header.
+--}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      {{#if contacts.length}}
+        <p class="info-line">
+          {{#each contacts}}
+            <span class="info">
+              <span class="info-tag">{{#if (eq kind "email")}}E-mail{{else if (eq kind "phone")}}Telephone{{else if (eq kind "location")}}Residence{{else if label}}{{label}}{{else}}Web{{/if}}</span>
+              {{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}
+            </span>
+          {{/each}}
+        </p>
+      {{/if}}
+      {{#each sidebarSections}}
+        {{#if (eq key "personalDetails")}}
+          <p class="info-line">
+            {{#each items}}<span class="info"><span class="info-tag">{{label}}</span> {{value}}</span>{{/each}}
+          </p>
+        {{/if}}
+      {{/each}}
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

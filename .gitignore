@@ -1,0 +1,14 @@
+node_modules
+dist
+
+# Keep environment variables out of version control
+.env
+
+# Local uploads
+uploads
+
+# tesseract.js caches its OCR language data in the working directory
+*.traineddata
+
+# Puppeteer's Chrome (see .puppeteerrc.cjs) — downloaded at install/build time
+.cache

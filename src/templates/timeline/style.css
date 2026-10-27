@@ -1,0 +1,285 @@
+/* "Timeline" — Poppins with Lora headings, a navy sidebar, a ringed experience timeline. */
+
+:root {
+  --navy: #2f3b52;
+  --ink: #1f2a3d;
+  --body: #3d4350;
+  --rule: #9aa0aa;
+}
+
+/* The sidebar runs to the page edges; both columns re-apply their padding
+   on a second page (box-decoration-break). */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  font-size: 7.8pt;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 32% minmax(0, 1fr);
+  min-height: 297mm;
+}
+
+.section-title {
+  break-after: avoid;
+  font-family: "Lora", Georgia, serif;
+  font-weight: 400;
+}
+
+/* ---- sidebar ---- */
+.side {
+  padding: 13mm 7mm 12mm;
+  background: var(--navy);
+  color: #fff;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.side .cv-section + .cv-section {
+  margin-top: 15pt;
+}
+
+.side .section-title {
+  margin-bottom: 7pt;
+  padding-bottom: 4pt;
+  border-bottom: 0.6pt solid rgba(255, 255, 255, 0.55);
+  font-size: 13pt;
+}
+
+.side .contact {
+  align-items: flex-start;
+  gap: 7pt;
+  margin-bottom: 4pt;
+  font-size: 7.6pt;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+}
+
+.side .c-icon {
+  display: inline-flex;
+  margin-top: 1pt;
+  font-size: 9pt;
+}
+
+.side .entry + .entry {
+  margin-top: 8pt;
+}
+
+.side .e-title {
+  font-size: 7.8pt;
+  font-weight: 700;
+}
+
+.side .e-sub,
+.side .e-date,
+.side .e-meta {
+  font-size: 7.4pt;
+}
+
+.side .bullets {
+  font-size: 7.4pt;
+}
+
+.side .skill-group + .skill-group {
+  margin-top: 5pt;
+}
+
+.side .s-cat {
+  display: block;
+  font-weight: 700;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items {
+  display: block;
+}
+
+.side .s-item,
+.side .lang,
+.side .tag {
+  display: list-item;
+  list-style: disc;
+  margin-left: 11pt;
+  margin-bottom: 2pt;
+}
+
+.side .s-item + .s-item::before,
+.side .tag + .tag::before {
+  content: none;
+}
+
+/* Grouped skills read as a comma list under each group name. */
+.side .skill-group:has(.s-cat) .s-item {
+  display: inline;
+  margin: 0;
+}
+
+.side .skill-group:has(.s-cat) .s-item + .s-item::before {
+  content: ", ";
+}
+
+.side .lang .l-level::before {
+  content: " (";
+}
+
+.side .lang .l-level::after {
+  content: ")";
+}
+
+/* ---- main column ---- */
+.main {
+  padding: 13mm 11mm 12mm 9mm;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.cv-header {
+  margin-bottom: 14pt;
+}
+
+h1 {
+  color: var(--ink);
+  font-size: 26pt;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+}
+
+.headline {
+  margin-top: 2pt;
+  color: var(--ink);
+  font-size: 11pt;
+  letter-spacing: 0.14em;
+}
+
+.intro {
+  margin-top: 8pt;
+  text-align: justify;
+}
+
+.main .cv-section + .cv-section {
+  margin-top: 15pt;
+}
+
+.main .section-title {
+  margin-bottom: 9pt;
+  padding-bottom: 4pt;
+  border-bottom: 0.6pt solid var(--rule);
+  color: var(--ink);
+  font-size: 14pt;
+}
+
+.main .entry + .entry {
+  margin-top: 9pt;
+}
+
+.main .e-title {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.main .e-sub {
+  font-weight: 700;
+}
+
+.e-date {
+  text-align: left;
+  font-size: 7.6pt;
+}
+
+.e-meta {
+  font-style: italic;
+}
+
+.e-desc,
+.bullets {
+  margin-top: 2pt;
+}
+
+.bullets {
+  padding-left: 12pt;
+}
+
+.bullets li {
+  text-align: justify;
+}
+
+/* The timeline: a line down the left, a ring at each job. */
+.is-timeline {
+  position: relative;
+  padding-left: 15pt;
+}
+
+.is-timeline::before {
+  content: "";
+  position: absolute;
+  top: 5pt;
+  bottom: 0;
+  left: 3.5pt;
+  border-left: 0.8pt solid var(--rule);
+}
+
+.is-timeline .entry {
+  position: relative;
+}
+
+.is-timeline .entry + .entry {
+  margin-top: 13pt;
+}
+
+.is-timeline .entry::before {
+  content: "";
+  position: absolute;
+  top: 2pt;
+  left: -15pt;
+  width: 6pt;
+  height: 6pt;
+  border: 1pt solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.e-org {
+  color: var(--ink);
+  font-family: "Lora", Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.25;
+}
+
+.e-role {
+  color: var(--ink);
+  font-size: 8.4pt;
+  font-weight: 700;
+}
+
+/* References side by side. */
+.references {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8pt 14pt;
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.r-name {
+  color: var(--ink);
+  font-size: 8.6pt;
+  font-weight: 700;
+}
+
+.r-contact {
+  font-size: 7.2pt;
+  word-break: break-word;
+}

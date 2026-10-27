@@ -1,0 +1,683 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  passwordHash  String?
+  googleId      String?         @unique
+  // Set once the user enters the code from the confirmation email (or signs in
+  // with Google, whose emails are already verified). Password sign-in is
+  // refused until then.
+  emailVerifiedAt DateTime?
+  fullName      String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  profiles      CareerProfile[]
+  refreshTokens RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  emailChangeRequest      EmailChangeRequest?
+
+  // Collected by the onboarding flow and editable in Account settings. The AI
+  // uses them as defaults for a CV's contact details (see
+  // services/profileDefaults.service.ts) — never over what the user's own
+  // material says. fullName is kept in sync as "firstName lastName".
+  firstName             String?
+  lastName              String?
+  phone                 String?
+  // occupationId points at the curated catalog when the user picked from it;
+  // occupationTitle is always what they chose or typed (a custom entry has no
+  // catalog row), so it's the value to display and feed to the AI.
+  occupationId          String?
+  occupation            Occupation? @relation(fields: [occupationId], references: [id], onDelete: SetNull)
+  occupationTitle       String?
+  // Every profession they gave (up to 5), main one first — occupationTitle /
+  // occupationId always mirror the first. The AI picks from these for a
+  // CV's headline when the material doesn't state one.
+  professions           String[]  @default([])
+  onboardingCompletedAt DateTime?
+
+  // Onboarding answers, for routing the first session and for segmenting
+  // activation in the admin's Insights (see schemas/onboarding.schema.ts for
+  // the allowed values). All optional: skipping onboarding leaves them null.
+  // signupIntent    — create | tailor | improve (what they came to do)
+  // careerStage     — student | entry | mid | senior | career_change
+  // acquisitionSource — search | social | telegram | friend | school | ad | other
+  // signupSurface   — dashboard (signed up, then onboarded) | try (signed up
+  //                   in the middle of a /try flow)
+  signupIntent       String?
+  careerStage        String?
+  acquisitionSource  String?
+  // Free text for acquisitionSource "other" (or extra detail).
+  acquisitionDetail  String?
+  signupSurface      String?
+  // First-touch attribution captured by the browser before sign-up
+  // (utm_* params, referrer host, landing path, /go link). Set once.
+  signupAttribution  Json?
+
+  // What happens to a matching career profile when a new CV is made:
+  // "ask" (show the update card), "always" (update or create it in the
+  // background) or "never".
+  profileAutoSync String @default("ask")
+
+  // GoMoxie Pro subscription state. Two independent ways to grant it:
+  // Polar (real recurring subscription, synced from webhooks — see
+  // src/services/polar/subscription-sync.service.ts) or Chapa (no
+  // recurring billing — a one-time payment grants a fixed 1-month period,
+  // see payment.service.ts's grantChapaProPeriod). `subscriptionProvider`
+  // says which one currently owns these fields; the Polar-specific fields
+  // are simply unused/stale while a Chapa period is active, and vice versa.
+  subscriptionProvider String? // "POLAR" | "CHAPA"
+
+  polarCustomerId               String?   @unique
+  polarSubscriptionId           String?   @unique
+  polarProductId                String?
+  // Mirrors Polar's own SubscriptionStatus verbatim (incomplete |
+  // incomplete_expired | trialing | active | past_due | canceled | unpaid |
+  // paused) when subscriptionProvider is "POLAR", plus "revoked" for the
+  // subscription.revoked event; always "active" while subscriptionProvider
+  // is "CHAPA" (Chapa has no other states — it either paid or didn't).
+  // Null until the user's first Pro grant of either kind.
+  subscriptionStatus            String?
+  subscriptionCurrentPeriodEnd  DateTime?
+  // Only meaningful for Polar — Chapa periods never auto-renew, so this
+  // stays false there; "expired" for a Chapa grant is derived purely from
+  // subscriptionCurrentPeriodEnd having passed (see toStatusResponse).
+  subscriptionCancelAtPeriodEnd Boolean   @default(false)
+
+  // Free-tier usage — one free completed flow per dashboard tab (Create,
+  // Tailor, Improve), not a shared pool. See
+  // src/services/entitlement.service.ts. Flipped via a conditional UPDATE
+  // (WHERE freeXUsed = false) so concurrent requests can't double-spend the
+  // same flag. A flow's own re-analysis (refine) step never re-checks these —
+  // only the very first /cv/analyze call of a new flow does (see
+  // analyzeCVSchema's cvDocumentId — present only on a refine call).
+  freeCreateUsed  Boolean @default(false)
+  freeTailorUsed  Boolean @default(false)
+  freeImproveUsed Boolean @default(false)
+  // How many free flows of each kind were spent. The limit per flow comes
+  // from the plan settings plus any limit grants (services/access.service.ts),
+  // so it can be more than one. The freeXUsed flags above are kept in step
+  // (true once any free use is spent) so older code still reads them right.
+  freeCreateUses  Int     @default(0)
+  freeTailorUses  Int     @default(0)
+  freeImproveUses Int     @default(0)
+
+  // Paid-plan usage (Plus limits, Pro fair use) for the current billing
+  // period. usagePeriodKey names the period the counts belong to (see
+  // access.service.ts's plan period keys); when it no longer matches the
+  // current period, the counts start again from zero.
+  usagePeriodKey    String?
+  periodCreateUses  Int     @default(0)
+  periodTailorUses  Int     @default(0)
+  periodImproveUses Int     @default(0)
+
+  // "USER" | "ADMIN". Only the backend-only bootstrap script
+  // (src/scripts/create-admin.ts) sets ADMIN — no API writes this column.
+  role             String    @default("USER")
+  // "ACTIVE" | "SUSPENDED". Suspended accounts are refused by requireAuth,
+  // sign-in and token refresh; their data is kept.
+  status           String    @default("ACTIVE")
+  suspendedAt      DateTime?
+  suspensionReason String?
+  lastLoginAt      DateTime?
+  // Refreshed at sign-in and (at most every few minutes) on token refresh.
+  lastActiveAt     DateTime?
+  // Opt-out of product announcement emails. Account, security and billing
+  // emails are still sent.
+  emailAnnouncementsOptOut Boolean @default(false)
+
+  entitlements        Entitlement[]
+  passwordResetTokens PasswordResetToken[]
+  notifications       UserNotification[]
+  pushSubscriptions   PushSubscription[]
+  aiUsageEvents       AiUsageEvent[]
+  emailLogs           EmailLog[]
+  productEvents       ProductEvent[]
+  feedback            Feedback[]
+  prompts             UserPrompt[]
+  lifecycleEmails     LifecycleEmail[]
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+// Product analytics: what people do on their way to a finished CV (the
+// activation funnel in the admin's Insights). Server-side milestones
+// (account_created, cv_generated, pdf_downloaded, …) are recorded where they
+// happen; a short allow-list of UI events comes from the browser
+// (POST /api/v1/events). Never holds CV content or other personal details.
+// Events of a deleted account stay, unlinked, so past funnels don't shift.
+model ProductEvent {
+  id          BigInt   @id @default(autoincrement())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Random per-browser id, for events before sign-up (the /try pages).
+  anonymousId String?
+  name        String
+  props       Json?
+  // "server" | "client"
+  source      String   @default("server")
+  // Set for events that count once (e.g. "active:<userId>:<day>"); a second
+  // insert with the same key is skipped.
+  dedupeKey   String?  @unique
+  createdAt   DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([userId, name])
+  @@index([createdAt])
+}
+
+// What people tell us: a rating after their first PDF, thumbs on an AI
+// draft, and the reason for deleting an account (stored without a user).
+model Feedback {
+  id           String   @id @default(uuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // cv_rating (rating 1–5) | ai_draft (rating 1 = up, -1 = down) | account_deletion
+  kind         String
+  rating       Int?
+  // A short reason from a fixed list (deletion reason, what was off in a draft).
+  reason       String?
+  comment      String?
+  cvDocumentId String?
+  // create | tailor | improve, when the feedback is about a flow's output.
+  flowType     String?
+  // Non-personal context, e.g. account age and plan at deletion.
+  context      Json?
+  createdAt    DateTime @default(now())
+
+  @@index([kind, createdAt])
+  @@index([userId])
+}
+
+// One-time UI prompts per user: the getting-started checklist, the tour
+// offer, the CV rating question. Kept on the server so they don't come back
+// on another device.
+model UserPrompt {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // checklist | tour_offer | cv_rating
+  key         String
+  shownAt     DateTime?
+  dismissedAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, key])
+}
+
+// Lifecycle emails (welcome, first-CV nudge, download reminder): one row per
+// user per kind, inserted before sending, so no email goes out twice even
+// with several servers running the scheduler. Accounts that existed before
+// these emails were added got "skipped" rows in the migration.
+model LifecycleEmail {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // welcome | first_cv_nudge | download_reminder
+  kind      String
+  // sending | sent | failed | skipped
+  status    String   @default("sending")
+  error     String?
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+
+  @@unique([userId, kind])
+  @@index([kind, createdAt])
+}
+
+// One-time password-reset links. Only the SHA-256 of the token is stored; a
+// new link replaces earlier ones. requestedById is set when an admin sent it.
+model PasswordResetToken {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String   @unique
+  expiresAt     DateTime
+  requestedById String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+}
+
+// A manual access grant made by an admin — never a payment. Access is
+// resolved from billing state plus every grant active right now (see
+// services/access.service.ts), so an expired or revoked grant simply stops
+// counting; nothing has to clean it up.
+//   PRO_ACCESS        full Pro access
+//   FEATURE           one feature (`feature`, e.g. "careerProfiles", "beta")
+//   LIMIT_ADJUSTMENT  `amount` more (or fewer, if negative) free uses of `flow`
+//   EXEMPTION         skip one restriction (`feature`: "aiRateLimit" | "generationQuota")
+model Entitlement {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           String
+  feature        String?
+  flow           String?
+  amount         Int?
+  reason         String
+  note           String?
+  startsAt       DateTime  @default(now())
+  expiresAt      DateTime?
+  createdById    String?
+  createdByEmail String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  revokedAt      DateTime?
+  revokedById    String?
+  revokeReason   String?
+
+  @@index([userId])
+  @@index([kind, revokedAt, expiresAt])
+}
+
+// Admin-editable platform settings (plan limits, feature rules, banner...).
+// One row per key; values are validated by services/settings.service.ts and
+// fall back to safe defaults when a row is missing.
+model PlatformSetting {
+  key         String   @id
+  value       Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+// Who did what, to what, when. Never holds secrets or passwords.
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  action     String
+  targetType String?
+  targetId   String?
+  summary    String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([action])
+}
+
+// One row per call to the AI provider, plus app-side refusals (quota,
+// rate limit). Holds counts and error codes only — never CV text or keys.
+model AiUsageEvent {
+  id               String   @id @default(uuid())
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // cv_generation | polish_summary | role_match
+  operation        String
+  flowType         String?
+  provider         String
+  model            String
+  // success | provider_rate_limited | timeout | provider_error | invalid_output | limit_reached | app_rate_limited | paused
+  status           String
+  errorCode        String?
+  errorMessage     String?
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  latencyMs        Int?
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+// Every email the app tried to send, with the outcome.
+model EmailLog {
+  id                String   @id @default(uuid())
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toEmail           String
+  // verification | email_change | password_reset | announcement | subscription | lifecycle | test
+  kind              String
+  subject           String
+  provider          String
+  // sent | failed | skipped
+  status            String
+  error             String?
+  providerMessageId String?
+  notificationId    String?
+  createdAt         DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+// An announcement or direct message created by an admin. Delivery to each
+// user is a UserNotification row (in-app); email and push results are
+// counted here.
+model Notification {
+  id             String    @id @default(uuid())
+  title          String
+  body           String
+  actionUrl      String?
+  // { type: "all" | "free" | "pro" | "paid" | "new" | "verified" | "beta" | "users", ... }
+  audience       Json
+  channels       String[]
+  // product (respects the email opt-out) | service (operational notices)
+  emailCategory  String    @default("product")
+  createdById    String?
+  createdByEmail String?
+  // sending | done | failed
+  status         String    @default("sending")
+  recipientCount Int       @default(0)
+  emailSent      Int       @default(0)
+  emailFailed    Int       @default(0)
+  emailSkipped   Int       @default(0)
+  pushSent       Int       @default(0)
+  pushFailed     Int       @default(0)
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+  // While "sending": the server delivering it renews this lease as it goes.
+  // A lapsed lease means that server stopped mid-send (restart, crash), and
+  // whichever server notices next resumes the delivery.
+  leaseUntil     DateTime?
+  recipients     UserNotification[]
+
+  @@index([createdAt])
+}
+
+model UserNotification {
+  id             String       @id @default(uuid())
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime?
+  dismissedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@unique([notificationId, userId])
+  @@index([userId, createdAt])
+}
+
+// Browser Web Push subscriptions (one per browser the user opted in on).
+model PushSubscription {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  userAgent     String?
+  failureCount  Int       @default(0)
+  lastSuccessAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// One row per refresh token ever issued (only its SHA-256 hash is stored).
+// Rotated on every /auth/refresh: the old row gets revokedAt + replacedById
+// and a new row is created with a fresh 30-day expiry, so a session only ends
+// after 30 days of inactivity, on logout, or on revocation. Presenting an
+// already-rotated token whose replacement was also used is treated as theft
+// and revokes all of the user's sessions — see src/services/session.service.ts.
+// One-time links from the confirmation email. Only the SHA-256 of the token
+// is stored; a new link replaces the user's earlier ones.
+// One pending confirmation per user: a 6-digit code emailed at sign-up
+// (older rows may still hold a link token). tokenHash is keyed with the
+// user's id, so equal codes for different users never collide.
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  // Wrong codes entered against this one; at the limit it stops working.
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// A pending change of a signed-in user's email: the new address only takes
+// over once the 6-digit code sent to it is typed back. One per user; a new
+// request replaces the old. codeHash is keyed with the user's id and the new
+// address, so a code only ever confirms the address it was sent to.
+model EmailChangeRequest {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newEmail  String
+  codeHash  String
+  // Wrong codes entered; at the limit the request stops working.
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// One row per request counted by a rate limiter (src/utils/rate-limit.ts).
+// Kept in Postgres so every server instance shares the same counts; rows
+// older than the limiter's longest window are deleted periodically.
+model RateLimitHit {
+  id        BigInt   @id @default(autoincrement())
+  // "<limiter name>:<key>", e.g. "resend:email:a@b.com"
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+// Dedupe key for webhook deliveries — Polar (and other providers) retry a
+// delivery with the same id (Standard Webhooks "webhook-id" header) on
+// timeout or a non-2xx response, so processing must be a no-op the second
+// time. Unlike Chapa (re-verified against Chapa's API on every call, so
+// naturally idempotent — see verifyAndSyncPayment), Polar signs the payload
+// itself and there's nothing to re-fetch, so the event id must be recorded.
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  provider  String
+  eventId   String
+  createdAt DateTime @default(now())
+  // Processing outcome, for the admin's webhook view. Null on rows recorded
+  // before outcomes were tracked.
+  eventType   String?
+  // The Polar object the event is about (a subscription id) — what a retry re-fetches.
+  resourceId  String?
+  // processed | failed | unmatched | ignored
+  status      String?
+  error       String?
+  processedAt DateTime?
+
+  @@unique([provider, eventId])
+  @@index([status, createdAt])
+}
+
+// One reusable career profile per user per role ("Backend Engineer",
+// "Data Analyst") — the source of truth CVs are generated from. Its facts
+// live in `content` (ProfileContent, see src/schemas/profile-content.schema.ts):
+// the CVContent sections minus contact details (those stay on User), with a
+// stable id + provenance meta on every list item so merges can match items
+// and never overwrite what the user edited by hand. Pro-only to create or
+// change; a downgraded user keeps read-only access.
+model CareerProfile {
+  id           String          @id @default(uuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Display name, user-editable.
+  title        String
+  // Canonical role identity (see services/roleKey.service.ts) — seniority and
+  // wording variants of one role share a key, so a user has at most one
+  // profile per role.
+  roleKey      String
+  occupationId String?
+  occupation   Occupation?     @relation(fields: [occupationId], references: [id], onDelete: SetNull)
+  // "senior" | "lead" | "junior"... — stripped out of roleKey, kept here.
+  seniority    String?
+  content      Json
+  // How the profile was first created: manual | cv
+  origin       String          @default("manual")
+  // Bumped on every content change. Clients send the version they edited
+  // (optimistic concurrency); CVDocument.profileVersion records which
+  // version a CV was generated from.
+  version      Int             @default(1)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  documents    CVDocument[]
+  changes      ProfileChange[]
+
+  @@unique([userId, roleKey])
+  @@index([userId])
+}
+
+// Audit trail of every content change to a profile. previousContent is the
+// full snapshot before the change, which is what makes undo possible.
+model ProfileChange {
+  id              String        @id @default(uuid())
+  profileId       String
+  profile         CareerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  // create | manual_edit | merge_cv | revert
+  kind            String
+  cvDocumentId    String?
+  fromVersion     Int
+  toVersion       Int
+  previousContent Json
+  // Per-section added/updated counts (see ProfileMergeSummary).
+  summary         Json?
+  createdAt       DateTime      @default(now())
+
+  @@index([profileId, createdAt])
+}
+
+model CVDocument {
+  id             String         @id @default(uuid())
+  userId         String
+  // Optional — a CV is a standalone generated document that may or may not
+  // belong to a reusable Career Profile.
+  profileId      String?
+  // The document's own display name (e.g. "Senior Cloud Architect - Resume")
+  // — distinct from content.personal.title, which is the candidate's job
+  // title/headline inside the CV itself. Null until first set.
+  title          String?
+  templateId     String         @default("professional")
+  content        Json
+  currentStep    String         @default("personal")
+  status         String         @default("draft")
+  source         String         @default("manual")
+  pdfPath        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  jobDescription String?
+  // The profile version this CV was generated from or last synced with.
+  profileVersion Int?
+  // CV score (services/score/engine.ts), recomputed on every save. Null until first scored.
+  score          Int?
+  scoreVersion   String?
+  // The job description's requirements, extracted by AI once per job description:
+  // { jdHash, data: { title, seniority, requiredSkills, preferredSkills, keywords } }.
+  // Cleared when the job description changes.
+  jobRequirements Json?
+  // Billing (see entitlement.service.ts): the flow whose AI generation paid
+  // for this CV — later AI passes on it are part of the same flow and free.
+  chargedFlow    String?
+  chargedAt      DateTime?
+  // Pay-per-CV: an AI CV made after the free one (or past a Plus limit) can be
+  // edited freely but needs unlocking to download. unlockProduct is what it
+  // costs ("cv_new" | "cv_edit"), lockedTier the plan it was made on — a
+  // higher plan later unlocks it — and unlockedAt is set once it's paid for.
+  unlockProduct  String?
+  lockedTier     String?
+  unlockedAt     DateTime?
+  profile        CareerProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([profileId])
+  @@index([userId, unlockProduct])
+}
+
+model CVImport {
+  id            String         @id @default(uuid())
+  userId        String
+  cvDocumentId  String?
+  fileType      String
+  // Legacy: uploads used to be saved to disk. They're now processed in memory
+  // and never stored, so this stays null for new imports.
+  filePath      String?
+  rawText       String?
+  extractedData Json?
+  status        String         @default("pending")
+  error         String?
+  createdAt     DateTime       @default(now())
+}
+
+// Generic Chapa payment record. `productType` + `resourceId` identify what
+// was paid for, so the same model can back future Chapa products without
+// schema changes. "PRO_SUBSCRIPTION" today (resourceId is the paying User's
+// own id — see grantChapaProPeriod); future: "PREMIUM_TEMPLATE" | "AI_CREDITS" | ...
+model Payment {
+  id                String   @id @default(uuid())
+  userId            String
+  productType       String
+  // The specific resource this payment unlocks — not a foreign key on
+  // purpose, same loose-coupling convention as CVImport.cvDocumentId.
+  resourceId        String
+  // "CHAPA" today — kept as a plain string (not an enum) to add providers
+  // later without a migration, matching this schema's no-enum convention.
+  provider          String   @default("CHAPA")
+  // Our own generated reference, sent to the provider as merchant_reference.
+  merchantReference String   @unique
+  // The provider's own reference (Chapa's chapa_reference), once known.
+  providerReference String?  @unique
+  checkoutUrl       String?
+  amount            Float
+  currency          String
+  // PENDING | SUCCESS | FAILED | CANCELLED | EXPIRED
+  status            String   @default("PENDING")
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([resourceId])
+  @@index([status])
+  @@index([userId, productType, resourceId])
+}
+
+// Curated list of occupations offered during onboarding and in Account
+// settings (GET /api/v1/occupations?q=). Rows ship with migrations, so every
+// environment gets the same list; users can still enter their own title,
+// which is stored on User.occupationTitle without a catalog row.
+model Occupation {
+  id        String   @id @default(uuid())
+  title     String   @unique
+  slug      String   @unique
+  category  String
+  // Extra words that should also match this occupation in search
+  // (e.g. "dev programmer" for Software Engineer), space separated.
+  keywords  String   @default("")
+  createdAt DateTime @default(now())
+  users     User[]
+  profiles  CareerProfile[]
+
+  @@index([category])
+}

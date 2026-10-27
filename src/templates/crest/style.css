@@ -1,0 +1,205 @@
+/* "Crest" — Poppins, a navy header band with a gold name, a two-column lower half. */
+
+:root {
+  --navy: #2d3f5e;
+  --gold: #d8b46c;
+  --ink: #111;
+  --body: #2a2a2a;
+  --rule: #dcdcdc;
+}
+
+/* The band runs to the page edges; the content keeps its padding on every page. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  font-size: 8.1pt;
+  line-height: 1.45;
+  color: var(--body);
+}
+
+/* ---- header band ---- */
+.cv-header {
+  padding: 11mm 13mm 8mm;
+  background:
+    linear-gradient(115deg, transparent 62%, rgba(255, 255, 255, 0.05) 62%, rgba(255, 255, 255, 0.05) 78%, transparent 78%),
+    var(--navy);
+  color: #fff;
+}
+
+h1 {
+  color: var(--gold);
+  font-size: 25pt;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin-top: 2pt;
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt 22pt;
+  margin-top: 9pt;
+  font-size: 8pt;
+}
+
+.c-icon {
+  display: inline-flex;
+}
+
+/* ---- content ---- */
+.content {
+  padding: 8mm 13mm 11mm;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.cv-section + .cv-section,
+.split {
+  margin-top: 13pt;
+}
+
+.section-title {
+  break-after: avoid;
+  margin-bottom: 6pt;
+  color: var(--ink);
+  font-size: 10pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cv-text {
+  text-align: justify;
+}
+
+.entry + .entry {
+  margin-top: 10pt;
+}
+
+.e-title,
+.e-date {
+  color: var(--ink);
+  font-size: 8.6pt;
+  font-weight: 700;
+}
+
+.e-loc,
+.e-meta {
+  font-size: 7.6pt;
+  font-weight: 400;
+  color: #555;
+}
+
+.e-line {
+  font-size: 8.1pt;
+}
+
+.e-desc,
+.bullets {
+  margin-top: 2pt;
+}
+
+.bullets {
+  padding-left: 13pt;
+}
+
+.cv-text,
+.bullets li {
+  text-align: justify;
+}
+
+.is-compact .entry + .entry {
+  margin-top: 5pt;
+}
+
+/* ---- two columns from the top: everything else | key skills & co. ---- */
+.content > .split {
+  margin-top: 0;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 31%;
+  column-gap: 9mm;
+  align-items: start;
+}
+
+.split-main .cv-section + .cv-section,
+.split-side .cv-section + .cv-section {
+  margin-top: 13pt;
+}
+
+.split-main > .cv-section:first-child,
+.split-side > .cv-section:first-child {
+  margin-top: 0;
+}
+
+/* Key skills: one per row, ruled like a checklist. */
+.split-side .skill-group + .skill-group {
+  margin-top: 4pt;
+}
+
+.split-side .s-cat {
+  display: block;
+  margin-bottom: 1pt;
+  color: var(--ink);
+}
+
+.split-side .s-cat::after {
+  content: "";
+}
+
+.split-side .s-items {
+  display: block;
+}
+
+.split-side .s-item,
+.split-side .lang,
+.split-side .tag {
+  display: list-item;
+  list-style: disc;
+  margin-left: 11pt;
+  padding: 2.5pt 0;
+  border-bottom: 0.6pt solid var(--rule);
+}
+
+.split-side .s-item + .s-item::before,
+.split-side .tag + .tag::before {
+  content: none;
+}
+
+/* References sit side by side. */
+.references {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8pt 12pt;
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.r-name {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.r-role {
+  font-size: 7.4pt;
+}
+
+.r-contact {
+  font-size: 7.2pt;
+  word-break: break-word;
+}

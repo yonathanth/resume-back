@@ -1,0 +1,56 @@
+{{!--
+  "Campus" — a student CV: a gray header band with a spaced name, a light
+  gray sidebar (profile, a dotted divider, contacts), and ▶-marked headings
+  in the main column. Entries override the shared markup to read top-down:
+  the organisation in small caps, then the dates, then the role or degree —
+  for jobs and volunteering the employer leads, as on the original.
+--}}
+{{#*inline "entry-org-first"}}
+  <div class="e-org">{{#if subtitle}}{{subtitle}}{{else}}{{title}}{{/if}}</div>
+  {{#if date}}<div class="e-date">{{date}}{{#if location}} · {{location}}{{/if}}</div>{{else if location}}<div class="e-date">{{location}}</div>{{/if}}
+  {{#if subtitle}}<div class="e-role">{{title}}</div>{{/if}}
+{{/inline}}
+{{#*inline "entry-title-first"}}
+  <div class="e-org">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</div>
+  {{#if date}}<div class="e-date">{{date}}{{#if location}} · {{location}}{{/if}}</div>{{else if location}}<div class="e-date">{{location}}</div>{{/if}}
+  {{#if subtitle}}<div class="e-role">{{subtitle}}</div>{{/if}}
+{{/inline}}
+{{#*inline "cv-entries"}}
+  <div class="entries">
+    {{#each entries}}
+      <div class="entry">
+        {{#if (eq ../key "experience")}}{{> entry-org-first}}{{else if (eq ../key "volunteering")}}{{> entry-org-first}}{{else}}{{> entry-title-first}}{{/if}}
+        {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+        {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+        {{> cv-bullets}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}CV</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+    </header>
+    <aside class="side">
+      {{#each sidebarSections}}{{#if (eq key "summary")}}{{> section}}{{/if}}{{/each}}
+      {{#if contacts.length}}
+        <section class="cv-section cv-contact">
+          <h2 class="section-title"><span class="section-label">Contact Me</span></h2>
+          <div class="section-body">{{> cv-contacts}}</div>
+        </section>
+      {{/if}}
+      {{#each sidebarSections}}{{#unless (eq key "summary")}}{{> section}}{{/unless}}{{/each}}
+    </aside>
+    <div class="main">{{#each mainSections}}{{> section}}{{/each}}</div>
+  </main>
+</body>
+</html>

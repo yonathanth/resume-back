@@ -1,0 +1,49 @@
+{{!--
+  "Capsule" — a rounded slate sidebar (contacts, skills, references,
+  languages) under white pill headings, beside a main column whose sections
+  sit in soft blue boxes under dark pill headings. No photo: the sidebar
+  starts at the top, level with the name.
+  References override the shared markup to show labeled Phone/Email lines.
+--}}
+{{#*inline "cv-references"}}
+  <div class="references">
+    {{#each items}}
+      <div class="reference">
+        <div class="r-name">{{name}}{{#if relationship}} <span class="r-rel">({{relationship}})</span>{{/if}}</div>
+        {{#if organization}}<div class="r-role">{{organization}}{{#if title}} / {{title}}{{/if}}</div>{{else if title}}<div class="r-role">{{title}}</div>{{/if}}
+        {{#if phone}}<div class="r-contact"><strong>Phone:</strong> {{phone}}</div>{{/if}}
+        {{#if email}}<div class="r-contact"><strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a></div>{{/if}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}CV</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <div class="layout">
+      <aside class="side">
+        {{#if contacts.length}}
+          <section class="cv-section cv-contact">
+            <h2 class="section-title"><span class="section-label">Contact Me</span></h2>
+            <div class="section-body">{{> cv-contacts}}</div>
+          </section>
+        {{/if}}
+        {{#each sidebarSections}}{{> section}}{{/each}}
+      </aside>
+      <div class="main">
+        <header class="cv-header">
+          <h1><span class="first">{{firstNames personal.full_name}}</span> <span class="last">{{lastName personal.full_name}}</span></h1>
+          {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        </header>
+        {{#each mainSections}}{{> section}}{{/each}}
+      </div>
+    </div>
+  </main>
+</body>
+</html>

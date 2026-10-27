@@ -1,0 +1,163 @@
+/* "Linen" — Cormorant Garamond name, Arimo text, a beige contact bar, ruled headings. */
+
+:root {
+  --beige: #efe1d6;
+  --ink: #111;
+  --body: #222;
+}
+
+@page {
+  size: A4;
+  margin: 14mm 17mm 15mm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 14mm 17mm 15mm;
+}
+
+body {
+  font-family: "Arimo", Arial, sans-serif;
+  font-size: 8.5pt;
+  line-height: 1.42;
+  color: var(--body);
+}
+
+/* ---- header ---- */
+.cv-header {
+  margin-bottom: 18pt;
+  text-align: center;
+}
+
+h1 {
+  color: var(--ink);
+  font-family: "Cormorant Garamond", Garamond, serif;
+  font-size: 30pt;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin-top: 4pt;
+  color: var(--ink);
+  font-size: 8.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Contacts sit in a beige bar, split by thin rules. */
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 13pt;
+  padding: 5pt 10pt;
+  background: var(--beige);
+  font-size: 7.6pt;
+  color: #333;
+}
+
+.contact {
+  display: block;
+  padding: 0 14pt;
+}
+
+.contact + .contact {
+  border-left: 0.8pt solid #333;
+}
+
+/* ---- sections ---- */
+.cv-section + .cv-section {
+  margin-top: 15pt;
+}
+
+.section-title {
+  break-after: avoid;
+  margin-bottom: 8pt;
+  padding-bottom: 3pt;
+  border-bottom: 0.8pt solid var(--ink);
+  color: var(--ink);
+  font-size: 10.5pt;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cv-text,
+.e-desc,
+.bullets li {
+  text-align: justify;
+}
+
+/* ---- entries ---- */
+.entry + .entry {
+  margin-top: 10pt;
+}
+
+.e-title {
+  color: var(--ink);
+}
+
+.e-sub {
+  font-style: italic;
+}
+
+.e-loc,
+.e-meta {
+  font-size: 8pt;
+  color: #555;
+}
+
+.e-meta {
+  font-style: italic;
+}
+
+.e-desc,
+.bullets {
+  margin-top: 4pt;
+}
+
+.bullets {
+  padding-left: 22pt;
+}
+
+.bullets li + li {
+  margin-top: 1pt;
+}
+
+.is-compact .entry + .entry {
+  margin-top: 5pt;
+}
+
+/* ---- lists ---- */
+.skill-group + .skill-group {
+  margin-top: 2pt;
+}
+
+.s-cat {
+  color: var(--ink);
+}
+
+.lang + .lang {
+  margin-top: 1pt;
+}
+
+.l-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.reference + .reference {
+  margin-top: 6pt;
+}
+
+.r-name {
+  font-weight: 700;
+  color: var(--ink);
+}

@@ -1,0 +1,303 @@
+/* "Midnight" — Poppins on a dark green-black page, a fresh green accent, row-style experience. */
+
+:root {
+  --bg: #1e2a2a;
+  --line: #34433f;
+  --green: #7cc66f;
+  --text: #f2f5f4;
+  --muted: #b9c3c1;
+}
+
+/* Dark to every edge: no page margins (they would print white). The
+   columns re-apply their padding on later pages instead. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+html,
+body {
+  background: var(--bg);
+}
+
+body.preview .page,
+body.thumbnail .page {
+  background: var(--bg);
+}
+
+body {
+  font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  font-size: 7.9pt;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.page {
+  position: relative;
+  min-height: 297mm;
+  background: var(--bg);
+}
+
+/* ---- corner decorations (first page only) ---- */
+.deco {
+  position: absolute;
+  color: var(--green);
+  pointer-events: none;
+}
+
+.deco-dots {
+  top: 5mm;
+  left: 6mm;
+  width: 17mm;
+  opacity: 0.35;
+}
+
+.deco-rings {
+  top: 0;
+  right: 0;
+  width: 85mm;
+  color: #3b4b48;
+}
+
+/* ---- header ---- */
+.cv-header {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 31%;
+  column-gap: 10mm;
+  align-items: end;
+  padding: 16mm 14mm 0;
+}
+
+h1 {
+  color: #fff;
+  font-size: 27pt;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.headline {
+  margin-top: 2pt;
+  color: var(--green);
+  font-size: 10.5pt;
+}
+
+.intro {
+  margin-top: 7pt;
+  color: var(--text);
+  font-size: 8.2pt;
+}
+
+/* ---- columns ---- */
+.columns {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 31%;
+  column-gap: 10mm;
+  padding: 0 14mm;
+}
+
+.main,
+.side {
+  padding: 9mm 0 10mm;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.section-title {
+  break-after: avoid;
+  margin-bottom: 8pt;
+  color: #fff;
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+
+.cv-section + .cv-section {
+  margin-top: 12pt;
+}
+
+/* ---- experience rows ---- */
+.main .entry {
+  display: grid;
+  grid-template-columns: 34% minmax(0, 1fr);
+  column-gap: 10pt;
+  padding: 7pt 0;
+  border-bottom: 0.6pt solid var(--line);
+}
+
+.main .entry:first-child {
+  padding-top: 0;
+}
+
+.main .entry:last-child {
+  border-bottom: 0;
+}
+
+.e-title {
+  color: #fff;
+  font-size: 8.4pt;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.e-date {
+  margin-top: 1pt;
+  text-align: left;
+  color: var(--green);
+  font-size: 7.8pt;
+}
+
+.e-sub {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.e-loc {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.e-meta {
+  font-style: italic;
+}
+
+.bullets {
+  padding-left: 11pt;
+}
+
+.bullets li::marker {
+  color: var(--green);
+}
+
+/* ---- right column ---- */
+/* Education as a timeline of green dots. */
+.side .cv-education .entries {
+  position: relative;
+  padding-left: 13pt;
+}
+
+.side .cv-education .entries::before {
+  content: "";
+  position: absolute;
+  top: 4pt;
+  bottom: 4pt;
+  left: 2.5pt;
+  border-left: 1pt solid var(--line);
+}
+
+.side .entry {
+  position: relative;
+}
+
+.side .entry + .entry {
+  margin-top: 6pt;
+}
+
+.side .cv-education .entry::before {
+  content: "";
+  position: absolute;
+  top: 3.5pt;
+  left: -13pt;
+  width: 6pt;
+  height: 6pt;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.side .e-title {
+  color: var(--text);
+  font-size: 8pt;
+}
+
+.side .e-date {
+  color: var(--muted);
+  font-size: 7.6pt;
+}
+
+.side .e-sub {
+  font-size: 7.6pt;
+  font-weight: 400;
+}
+
+/* Skills as outlined chips — no level bars without real levels. */
+.side .skill-group + .skill-group {
+  margin-top: 4pt;
+}
+
+.side .s-cat {
+  display: block;
+  margin-bottom: 3pt;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt;
+}
+
+.side .s-item,
+.side .tag {
+  display: inline-block;
+  padding: 0 5pt;
+  border: 0.7pt solid var(--green);
+  border-radius: 999px;
+  font-size: 7pt;
+}
+
+.side .s-item + .s-item::before,
+.side .tag + .tag::before {
+  content: none;
+}
+
+.side .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt;
+}
+
+.side .lang + .lang {
+  margin-top: 2pt;
+}
+
+.side .l-name {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Contacts sit top right, where the original design had its photo. */
+.header-contacts .contact {
+  align-items: flex-start;
+  gap: 7pt;
+  margin-top: 5pt;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.header-contacts .c-icon {
+  display: inline-flex;
+  color: var(--green);
+  font-size: 10pt;
+}
+
+.side .cv-text {
+  color: var(--text);
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.reference + .reference {
+  margin-top: 6pt;
+}
+
+.r-name {
+  color: var(--text);
+  font-weight: 700;
+}

@@ -1,0 +1,180 @@
+/*
+ * Defaults every template that uses the shared section markup starts from
+ * (prepended to its style.css by render.service.ts). Templates only restyle
+ * what differs: fonts, colors, headings, column layout, entry arrangement.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: #111;
+  background: #fff;
+  font-size: 10pt;
+  line-height: 1.3;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Editor preview: the A4 sheet on a gray desk. Thumbnails: just the sheet. */
+body.preview {
+  background: #e5e5e5;
+  padding: 24px 0;
+}
+
+body.preview .page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+body.thumbnail .page {
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+dl,
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  display: block;
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+}
+
+/* Off unless a template turns them on. */
+.section-icon,
+.c-icon,
+.c-label,
+.l-bar {
+  display: none;
+}
+
+/* ---- entries ---- */
+.entry {
+  break-inside: avoid;
+}
+
+.entry-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12pt;
+  align-items: baseline;
+}
+
+.e-title {
+  grid-column: 1;
+  font-weight: 700;
+}
+
+.e-date {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.e-sub {
+  grid-column: 1;
+}
+
+.e-loc {
+  grid-column: 2;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.e-meta {
+  grid-column: 1 / -1;
+}
+
+.bullets {
+  padding-left: 14pt;
+  list-style: disc;
+}
+
+/* ---- lists ---- */
+.skill-groups,
+.languages,
+.tags,
+.contacts {
+  list-style: none;
+}
+
+.s-cat::after {
+  content: ": ";
+}
+
+.s-item + .s-item::before {
+  content: ", ";
+}
+
+.tag {
+  display: inline;
+}
+
+.tag + .tag::before {
+  content: ", ";
+}
+
+.lang .l-level::before {
+  content: " – ";
+}
+
+.d-row {
+  display: flex;
+  gap: 6pt;
+}
+
+.details dt {
+  font-weight: 700;
+}
+
+.details dt::after {
+  content: ":";
+}
+
+.contact {
+  display: flex;
+  align-items: center;
+  gap: 5pt;
+}
+
+/* A consent clause is small print at the end, never a titled section. */
+.cv-consent .section-title {
+  display: none;
+}
+
+.cv-consent .cv-text {
+  font-size: 6.5pt;
+  color: #777;
+  line-height: 1.25;
+}

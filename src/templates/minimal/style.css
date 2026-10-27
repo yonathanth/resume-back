@@ -1,0 +1,111 @@
+/* "Minimal" — Jake's Resume: Computer Modern, 11pt article, small-caps rules. */
+
+@page {
+  size: A4;
+  margin: 0.5in 0.55in;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 0.5in 0.55in;
+}
+
+body {
+  font-family: "CMU Serif", Georgia, "Times New Roman", serif;
+  font-size: 10.5pt;
+  line-height: 1.22;
+}
+
+.cv-header {
+  text-align: center;
+  margin-bottom: 6pt;
+}
+
+h1 {
+  font-size: 25pt;
+  font-weight: 700;
+  font-variant: small-caps;
+  line-height: 1.1;
+}
+
+.contact-line {
+  margin-top: 3pt;
+  font-size: 9.5pt;
+}
+
+.contact-item + .contact-item::before {
+  content: " | ";
+}
+
+.contact-line a {
+  text-decoration: underline;
+}
+
+.cv-section {
+  margin-top: 8pt;
+}
+
+.section-title {
+  font-size: 12.5pt;
+  font-weight: 400;
+  font-variant: small-caps;
+  border-bottom: 0.6pt solid #000;
+  padding-bottom: 1pt;
+  margin-bottom: 4pt;
+}
+
+.section-body {
+  padding-left: 10pt;
+}
+
+.entry {
+  margin-bottom: 5pt;
+}
+
+.e-sub,
+.e-loc {
+  font-size: 9.5pt;
+  font-style: italic;
+}
+
+/* Projects read "Name | tech stack" with the date on the right. */
+.cv-projects .e-meta {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 9.5pt;
+  font-style: italic;
+}
+
+.bullets {
+  margin-top: 2pt;
+  font-size: 9.5pt;
+}
+
+.bullets li {
+  margin-bottom: 1pt;
+}
+
+.cv-text,
+.skill-groups,
+.languages,
+.tags,
+.details,
+.references {
+  font-size: 9.5pt;
+}
+
+.skill-group {
+  margin-bottom: 1pt;
+}
+
+.s-cat {
+  font-weight: 700;
+}
+
+.is-compact .entry {
+  margin-bottom: 2pt;
+}
+
+.e-desc {
+  font-size: 9.5pt;
+}

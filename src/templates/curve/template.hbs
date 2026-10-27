@@ -1,0 +1,132 @@
+{{!--
+  "Curve" — after LianTze Lim's "A Customised CurVe CV" (curve class +
+  settings.sty): sans name with icon fields and a photo on the right, a
+  centered title, and rubrics headed by a fading olive swish. Each rubric is a
+  two-column table: right-aligned keys (dates, skill groups) and entries; an
+  entry with no key gets the crimson bookmark marker (CurVe's \prefix).
+
+  The shared section partial is overridden so every section renders as a rubric.
+--}}
+{{#*inline "row-key"}}
+  <div class="key">{{#if date}}{{date}}{{else}}<span class="marker">{{icon "bookmark"}}</span>{{/if}}</div>
+{{/inline}}
+
+{{#*inline "row-bullets"}}
+  {{#if bullets.length}}
+    <ul class="bullets">
+      {{#each bullets}}<li>{{#if label}}<strong>{{label}}:</strong> {{/if}}{{text}}</li>{{/each}}
+    </ul>
+  {{/if}}
+{{/inline}}
+
+{{#*inline "rows"}}
+  {{#each entries}}
+    <div class="row">
+      {{> row-key}}
+      <div class="body">
+        <p class="lead"><strong>{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</strong>{{#if subtitle}}, {{subtitle}}{{/if}}{{#if location}}, {{location}}{{/if}}</p>
+        {{#if meta}}<p class="meta">{{meta}}</p>{{/if}}
+        {{#if description}}<p class="desc">{{description}}</p>{{/if}}
+        {{> row-bullets}}
+      </div>
+    </div>
+  {{/each}}
+{{/inline}}
+
+{{!-- IEEE-style numbered list, as the original's biblatex setup prints it. --}}
+{{#*inline "publication-rows"}}
+  {{#each entries}}
+    <div class="row pub">
+      <div class="key pub-num"></div>
+      <div class="body">
+        {{#if meta}}{{meta}}, {{/if}}“{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}},”{{#if subtitle}} <em>{{subtitle}}</em>{{#if date}},{{/if}}{{/if}}{{#if date}} {{date}}{{/if}}.
+      </div>
+    </div>
+  {{/each}}
+{{/inline}}
+
+{{#*inline "section"}}
+  <section class="rubric cv-{{key}}">
+    <h2 class="rubric-head">{{title}}</h2>
+    <div class="rubric-body">
+      {{#if (eq kind "text")}}
+        <div class="row text-row"><p class="body text">{{text}}</p></div>
+      {{/if}}
+      {{#if (eq kind "entries")}}
+        {{#if (eq key "publications")}}{{> publication-rows}}{{else}}{{> rows}}{{/if}}
+      {{/if}}
+      {{#if (eq kind "skills")}}
+        {{#each groups}}
+          <div class="row">
+            <div class="key">{{#if category}}{{category}}{{else}}<span class="marker">{{icon "bookmark"}}</span>{{/if}}</div>
+            <div class="body">{{join items ", "}}</div>
+          </div>
+        {{/each}}
+      {{/if}}
+      {{#if (eq kind "languages")}}
+        {{#each items}}
+          <div class="row">
+            <div class="key">{{language}}</div>
+            <div class="body">{{proficiency}}</div>
+          </div>
+        {{/each}}
+      {{/if}}
+      {{#if (eq kind "tags")}}
+        <div class="row">
+          <div class="key"><span class="marker">{{icon "bookmark"}}</span></div>
+          <div class="body">{{join items ", "}}</div>
+        </div>
+      {{/if}}
+      {{#if (eq kind "details")}}
+        {{#each items}}
+          <div class="row"><div class="key">{{label}}</div><div class="body">{{value}}</div></div>
+        {{/each}}
+      {{/if}}
+      {{#if (eq kind "references")}}
+        <div class="referees">
+          {{#each items}}
+            <div class="referee">
+              <strong>{{name}}</strong>
+              {{#if title}}<div>{{title}}</div>{{/if}}
+              {{#if organization}}<div>{{organization}}</div>{{/if}}
+              {{#if relationship}}<div class="rel">{{relationship}}</div>{{/if}}
+              {{#if email}}<div class="tt"><a href="mailto:{{email}}">{{email}}</a></div>{{/if}}
+              {{#if phone}}<div>{{phone}}</div>{{/if}}
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
+    </div>
+  </section>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Curriculum Vitae</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <div class="identity">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        {{#if contacts.length}}
+          <ul class="fields">
+            {{#each contacts}}
+              <li class="field f-{{kind}}">
+                <span class="f-icon">{{icon icon}}</span>
+                <span class="f-text">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </div>
+      {{#if photo}}<img class="photo" src="{{photo}}" alt="" />{{/if}}
+    </header>
+    <p class="doc-title">Curriculum Vitae</p>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

@@ -1,0 +1,210 @@
+/* "Sidebar" — after Philip Empl's CV: Raleway, slate accent, underlined section heads, date boxes. */
+
+:root {
+  --accent: #3b4d61;
+  --dark: #464646;
+  --light: #f3f3f3;
+}
+
+/* Full-bleed heading bar, so the page has no printer margin; columns pad themselves. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: "Raleway", "Helvetica Neue", Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.4;
+  color: #404040;
+}
+
+.topbar {
+  height: 1.1cm;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 62% 45%, 52% 100%, 0 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12pt;
+  padding: 0.28cm 0.7cm;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 31% minmax(0, 1fr);
+  column-gap: 2.2em;
+  padding: 0.6cm 1cm 1cm;
+}
+
+.side {
+  border-right: 4pt solid var(--light);
+  padding-right: 1.2em;
+}
+
+.photo {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  margin-bottom: 8pt;
+}
+
+h1 {
+  color: var(--dark);
+  font-size: 16pt;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.headline {
+  margin-top: 2pt;
+  color: var(--dark);
+}
+
+.cv-section {
+  margin-top: 14pt;
+}
+
+.section-title {
+  color: var(--dark);
+  font-size: 14pt;
+  font-weight: 700;
+  margin-bottom: 6pt;
+}
+
+.section-title::after {
+  content: "";
+  display: block;
+  width: 3.2cm;
+  height: 1.5pt;
+  margin-top: 2pt;
+  background: var(--accent);
+}
+
+/* Main column: title with the date in a filled box on the right. */
+.main .e-title {
+  color: #000;
+}
+
+.main .e-date {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 8.5pt;
+  padding: 1pt 8pt;
+  min-width: 2.8cm;
+  text-align: center;
+}
+
+.main .e-sub,
+.main .e-loc {
+  color: #555;
+}
+
+.main .entry {
+  margin-bottom: 11pt;
+}
+
+.bullets {
+  margin-top: 3pt;
+  padding-left: 12pt;
+}
+
+/* Sidebar: stacked entries, caret-style lists, and bars for languages. */
+/* Sidebar entries read date, title, organization, place — one per line. */
+.side .entry-head {
+  display: flex;
+  flex-direction: column;
+}
+
+.side .e-date {
+  order: -1;
+  font-weight: 700;
+  text-align: left;
+}
+
+.side .e-loc {
+  text-align: left;
+}
+
+.side .e-sub,
+.side .e-loc {
+  color: #555;
+}
+
+.side .entry {
+  margin-bottom: 8pt;
+}
+
+.side .s-cat {
+  display: block;
+  font-weight: 700;
+  margin-top: 3pt;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-item,
+.side .tag {
+  display: block;
+}
+
+.side .s-item::before,
+.side .tag::before,
+.details dd::before {
+  content: "▸ ";
+  color: var(--accent);
+}
+
+.details .d-row {
+  display: block;
+  margin-bottom: 3pt;
+}
+
+.details dt {
+  font-weight: 400;
+  font-size: 8pt;
+  color: #777;
+}
+
+.lang {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 5pt;
+}
+
+.l-name {
+  font-weight: 700;
+  color: #000;
+}
+
+.lang .l-level::before {
+  content: "";
+}
+
+.l-bar {
+  display: block;
+  grid-column: 1 / -1;
+  height: 4pt;
+  margin-top: 2pt;
+  background: var(--light);
+  border-radius: 2pt;
+}
+
+.l-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2pt;
+}
+
+.contacts {
+  display: grid;
+  gap: 4pt;
+}
+
+.c-icon {
+  display: inline-flex;
+  color: var(--accent);
+}

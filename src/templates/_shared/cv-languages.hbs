@@ -1,0 +1,10 @@
+{{!-- `level` (0-1) is derived from the proficiency text; the bar is hidden unless a template shows it. --}}
+<ul class="languages">
+  {{#each items}}
+    <li class="lang">
+      <span class="l-name">{{language}}</span>
+      {{#if proficiency}}<span class="l-level">{{proficiency}}</span>{{/if}}
+      {{#if level}}<span class="l-bar"><span class="l-fill" style="width: {{percent level}}"></span></span>{{/if}}
+    </li>
+  {{/each}}
+</ul>

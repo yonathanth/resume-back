@@ -1,0 +1,251 @@
+/* "Bubble" — after bubblecv: Source Sans, teal bubbles, a timeline of dates, tinted sidebar. */
+
+:root {
+  --accent: #1e6f8f;
+  --muted: #6b7280;
+  --panel: #f1f5f7;
+}
+
+@page {
+  size: A4;
+  margin: 1.1cm 1.2cm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 1.1cm 1.2cm;
+}
+
+body {
+  font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.38;
+  color: #1f2937;
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 14pt;
+  margin-bottom: 14pt;
+}
+
+.photo {
+  width: 2.4cm;
+  height: 2.4cm;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3pt solid var(--accent);
+}
+
+h1 {
+  font-size: 24pt;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.headline {
+  margin-top: 2pt;
+  color: var(--accent);
+  font-size: 12pt;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 31%;
+  column-gap: 0.9cm;
+}
+
+.cv-section {
+  margin-bottom: 12pt;
+}
+
+/* The "bubble": a filled accent circle holding the section icon. */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 7pt;
+  font-size: 12.5pt;
+  font-weight: 700;
+  margin-bottom: 6pt;
+}
+
+.section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20pt;
+  height: 20pt;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10pt;
+}
+
+/* Main column: dates in their own column beside each entry. */
+.main .entry-head {
+  grid-template-columns: 2.4cm minmax(0, 1fr);
+  column-gap: 8pt;
+}
+
+.main .e-date {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  text-align: left;
+  white-space: normal;
+  color: var(--muted);
+  font-size: 8.5pt;
+}
+
+.main .e-title,
+.main .e-sub,
+.main .e-loc,
+.main .e-meta {
+  grid-column: 2;
+  text-align: left;
+}
+
+.main .e-sub,
+.main .e-loc {
+  color: var(--muted);
+}
+
+.main .e-desc,
+.main .bullets {
+  margin-left: calc(2.4cm + 8pt);
+}
+
+.main .entry {
+  padding-bottom: 6pt;
+  margin-bottom: 6pt;
+  border-bottom: 0.6pt solid #e5e7eb;
+}
+
+.main .entry:last-child {
+  border-bottom: 0;
+}
+
+.bullets {
+  margin-top: 2pt;
+  padding-left: 12pt;
+}
+
+.cv-summary .cv-text {
+  color: #374151;
+}
+
+/* Sidebar panel. */
+.side {
+  background: var(--panel);
+  border-radius: 8pt;
+  padding: 10pt 10pt 4pt;
+  align-self: start;
+}
+
+.side .section-title {
+  font-size: 11pt;
+}
+
+.side .section-icon {
+  width: 17pt;
+  height: 17pt;
+  font-size: 8.5pt;
+}
+
+.side .contact {
+  display: grid;
+  grid-template-columns: 14pt minmax(0, 1fr);
+  align-items: start;
+  column-gap: 5pt;
+  margin-bottom: 5pt;
+  word-break: break-word;
+}
+
+.side .c-icon {
+  display: inline-flex;
+  grid-row: 1 / span 2;
+  margin-top: 2pt;
+  color: var(--accent);
+}
+
+.side .c-label {
+  display: block;
+  font-weight: 700;
+  font-size: 8.5pt;
+}
+
+.side .c-text {
+  grid-column: 2;
+  font-size: 8.5pt;
+}
+
+.side .s-cat {
+  display: block;
+  font-weight: 700;
+  margin-top: 4pt;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-item,
+.side .tag {
+  display: block;
+  padding: 2pt 0;
+  border-bottom: 0.8pt dotted #b8c2c8;
+}
+
+.side .s-item + .s-item::before,
+.side .tag + .tag::before {
+  content: none;
+}
+
+.lang {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 5pt;
+}
+
+.l-name {
+  font-weight: 700;
+}
+
+.lang .l-level {
+  color: var(--muted);
+  font-size: 8.5pt;
+}
+
+.lang .l-level::before {
+  content: "";
+}
+
+.l-bar {
+  display: block;
+  grid-column: 1 / -1;
+  height: 4pt;
+  margin-top: 2pt;
+  background: #d5dee3;
+  border-radius: 2pt;
+}
+
+.l-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2pt;
+}
+
+.side .entry-head {
+  display: block;
+}
+
+.side .e-date {
+  text-align: left;
+  color: var(--muted);
+  font-size: 8.5pt;
+}
+
+.side .entry {
+  margin-bottom: 5pt;
+}

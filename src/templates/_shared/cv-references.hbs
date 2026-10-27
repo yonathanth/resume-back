@@ -1,0 +1,9 @@
+<div class="references">
+  {{#each items}}
+    <div class="reference">
+      <div class="r-name">{{name}}{{#if relationship}} <span class="r-rel">({{relationship}})</span>{{/if}}</div>
+      {{#if title}}<div class="r-role">{{title}}{{#if organization}}, {{organization}}{{/if}}</div>{{else if organization}}<div class="r-role">{{organization}}</div>{{/if}}
+      {{#if email}}<div class="r-contact"><a href="mailto:{{email}}">{{email}}</a>{{#if phone}} · {{phone}}{{/if}}</div>{{else if phone}}<div class="r-contact">{{phone}}</div>{{/if}}
+    </div>
+  {{/each}}
+</div>

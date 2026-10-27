@@ -1,0 +1,20 @@
+{{!--
+  Jobs, degrees, projects, awards... all normalized to one entry shape. The
+  head is a 2-column grid by default (title/date on row 1, subtitle/location on
+  row 2); templates rearrange the e-* cells with CSS.
+--}}
+<div class="entries">
+  {{#each entries}}
+    <div class="entry">
+      <div class="entry-head">
+        <div class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</div>
+        {{#if date}}<div class="e-date">{{date}}</div>{{/if}}
+        {{#if subtitle}}<div class="e-sub">{{subtitle}}</div>{{/if}}
+        {{#if location}}<div class="e-loc">{{location}}</div>{{/if}}
+        {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+      </div>
+      {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+      {{> cv-bullets}}
+    </div>
+  {{/each}}
+</div>

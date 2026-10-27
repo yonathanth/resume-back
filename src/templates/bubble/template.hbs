@@ -1,0 +1,32 @@
+{{!-- "Bubble" — after bubblecv: round section icons, dates beside each role, a sidebar with contacts and bars. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}CV</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      {{#if photo}}<img class="photo" src="{{photo}}" alt="" />{{/if}}
+      <div>
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      </div>
+    </header>
+    <div class="columns">
+      <div class="main">{{#each mainSections}}{{> section}}{{/each}}</div>
+      <aside class="side">
+        {{#if contacts.length}}
+          <section class="cv-section cv-contact">
+            <h2 class="section-title"><span class="section-icon">{{icon "mail"}}</span><span class="section-label">Contact</span></h2>
+            {{> cv-contacts}}
+          </section>
+        {{/if}}
+        {{#each sidebarSections}}{{> section}}{{/each}}
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

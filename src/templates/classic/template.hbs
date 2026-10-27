@@ -1,0 +1,260 @@
+{{!--
+  "Classic" — an HTML/CSS rebuild of the LaTeX resume layout (article class +
+  titlesec small-caps rules, \resumeSubheading tables, \resumeItem bullets).
+  Rendered by render.service.ts for both the live preview and the PDF.
+
+  Each inline partial below renders one section; the registry in
+  config/cv-templates.ts decides which sections appear and in what order.
+--}}
+{{#*inline "bullets"}}
+  {{#if bullets.length}}
+    <ul class="items">
+      {{#each bullets}}
+        <li>{{#if label}}<strong>{{label}}</strong>: {{/if}}{{text}}</li>
+      {{/each}}
+    </ul>
+  {{/if}}
+{{/inline}}
+
+{{#*inline "summary"}}
+  <section>
+    <h2>Summary</h2>
+    <p class="summary">{{text}}</p>
+  </section>
+{{/inline}}
+
+{{#*inline "education"}}
+  <section>
+    <h2>Education</h2>
+    <ul class="entries">
+      {{#each items}}
+        <li class="entry">
+          <div class="row">
+            <strong>{{#if institution}}{{institution}}{{else}}{{degree}}{{#if field}}{{#if degree}} in {{/if}}{{field}}{{/if}}{{/if}}</strong>
+            <span>{{location}}</span>
+          </div>
+          <div class="row">
+            <em>{{#if institution}}{{degree}}{{#if field}} in {{field}}{{/if}}{{/if}}{{#if gpa}}<span class="upright"> – GPA: {{gpa}}</span>{{/if}}{{#if honors}}<span class="upright"> – {{honors}}</span>{{/if}}</em>
+            <em>{{dateRange start_date end_date}}</em>
+          </div>
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "experience"}}
+  <section>
+    <h2>Experience</h2>
+    <ul class="entries">
+      {{#each items}}
+        <li class="entry">
+          <div class="row">
+            <strong>{{#if company}}{{company}}{{else}}{{role}}{{/if}}</strong>
+            <span>{{#if url}}<a href="{{href url}}">{{displayUrl url}}</a>{{#if location}} – {{/if}}{{/if}}{{location}}</span>
+          </div>
+          <div class="row">
+            <em>{{#if company}}{{role}}{{/if}}</em>
+            <em>{{dateRange start_date end_date}}</em>
+          </div>
+          {{> bullets}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "projects"}}
+  <section>
+    <h2>Projects</h2>
+    <ul class="entries">
+      {{#each items}}
+        <li class="entry">
+          <div class="row">
+            <strong>{{#if url}}<a href="{{href url}}">{{name}}</a>{{else}}{{name}}{{/if}}</strong>
+            <span>{{join tech ", "}}</span>
+          </div>
+          {{#if subtitle}}<div class="row"><em>{{subtitle}}</em></div>{{/if}}
+          {{#if bullets.length}}
+            {{> bullets}}
+          {{else if description}}
+            <p class="description">{{description}}</p>
+          {{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "skills"}}
+  <section>
+    <h2>Skills Summary</h2>
+    <ul class="items skills">
+      {{#each groups}}
+        <li>{{#if category}}<strong>{{category}}</strong>: {{/if}}{{join items ", "}}</li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "certifications"}}
+  <section>
+    <h2>Certifications</h2>
+    <ul class="items">
+      {{#each items}}
+        <li>
+          <strong>{{#if url}}<a href="{{href url}}">{{name}}</a>{{else}}{{name}}{{/if}}</strong>{{#if issuer}} – {{issuer}}{{/if}}{{#if date}}<span class="right"><em>{{formatDate date}}</em></span>{{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "awards"}}
+  <section>
+    <h2>Awards</h2>
+    <ul class="items">
+      {{#each items}}
+        <li>
+          <strong>{{title}}</strong>{{#if issuer}} – {{issuer}}{{/if}}{{#if date}}<span class="right"><em>{{formatDate date}}</em></span>{{/if}}
+          {{#if description}}<div>{{description}}</div>{{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "publications"}}
+  <section>
+    <h2>Publications</h2>
+    <ul class="items">
+      {{#each items}}
+        <li>
+          {{#if authors}}{{authors}}. {{/if}}<strong>{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</strong>.{{#if venue}} <em>{{venue}}</em>{{#if date}},{{/if}}{{/if}}{{#if date}} {{formatDate date}}{{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "volunteering"}}
+  <section>
+    <h2>Volunteering</h2>
+    <ul class="entries">
+      {{#each items}}
+        <li class="entry">
+          <div class="row">
+            <strong>{{organization}}</strong>
+            <span>{{location}}</span>
+          </div>
+          {{#if role}}
+            <div class="row">
+              <em>{{role}}</em>
+              <em>{{dateRange start_date end_date}}</em>
+            </div>
+          {{/if}}
+          {{> bullets}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "courses"}}
+  <section>
+    <h2>Courses</h2>
+    <ul class="items">
+      {{#each items}}
+        <li><strong>{{name}}</strong>{{#if institution}} – {{institution}}{{/if}}{{#if date}}<span class="right"><em>{{formatDate date}}</em></span>{{/if}}</li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "memberships"}}
+  <section>
+    <h2>Memberships</h2>
+    <ul class="items">
+      {{#each items}}
+        <li><strong>{{organization}}</strong>{{#if role}} – {{role}}{{/if}}<span class="right"><em>{{dateRange start_date end_date}}</em></span></li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "presentations"}}
+  <section>
+    <h2>Talks &amp; Presentations</h2>
+    <ul class="items">
+      {{#each items}}
+        <li><strong>{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</strong>{{#if event}} – {{event}}{{/if}}{{#if date}}<span class="right"><em>{{formatDate date}}</em></span>{{/if}}</li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "interests"}}
+  <section>
+    <h2>Interests</h2>
+    <p class="summary">{{join items ", "}}</p>
+  </section>
+{{/inline}}
+
+{{#*inline "references"}}
+  <section>
+    <h2>References</h2>
+    <ul class="entries references">
+      {{#each items}}
+        <li class="entry">
+          <strong>{{name}}</strong>{{#if relationship}} <em>({{relationship}})</em>{{/if}}
+          {{#if title}}<div>{{title}}{{#if organization}}, {{organization}}{{/if}}</div>{{else if organization}}<div>{{organization}}</div>{{/if}}
+          {{#if email}}<div><a href="mailto:{{email}}">{{email}}</a>{{#if phone}} · {{phone}}{{/if}}</div>{{else if phone}}<div>{{phone}}</div>{{/if}}
+        </li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+
+{{#*inline "languages"}}
+  <section>
+    <h2>Languages</h2>
+    <ul class="items">
+      {{#each items}}
+        <li><strong>{{language}}</strong>{{#if proficiency}}: {{proficiency}}{{/if}}</li>
+      {{/each}}
+    </ul>
+  </section>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="{{#if photo}}with-photo{{/if}}">
+      {{#if photo}}<img class="photo" src="{{photo}}" alt="" />{{/if}}
+      <div class="row">
+        <h1>{{personal.full_name}}</h1>
+        <span>{{#if personal.email}}Email: <a href="mailto:{{personal.email}}">{{personal.email}}</a>{{/if}}</span>
+      </div>
+      <div class="row">
+        <span>
+          {{#if personal.title}}<em>{{personal.title}}</em>{{#if personal.links.length}} | {{/if}}{{/if}}
+          {{#each personal.links}}{{#if @index}} | {{/if}}<a href="{{href url}}">{{#if label}}{{label}}: {{/if}}{{displayUrl url}}</a>{{/each}}
+        </span>
+        <span>{{#if personal.phone}}Mobile: {{personal.phone}}{{/if}}</span>
+      </div>
+      {{#if personal.location}}
+        <div class="row"><span></span><span>{{personal.location}}</span></div>
+      {{/if}}
+    </header>
+
+    {{#each sections}}
+      {{> (lookup this "key")}}
+    {{/each}}
+  </main>
+</body>
+</html>

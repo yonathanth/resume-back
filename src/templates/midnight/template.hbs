@@ -1,0 +1,63 @@
+{{!--
+  "Midnight" — a dark page with a green accent. The header holds name, title
+  and the summary, with icon contacts where the original had its photo; work
+  experience reads as rows (role and dates on the left, employer and details
+  on the right); a narrow right column holds an education timeline, skills
+  and languages. Faint decorations sit in the top corners of the first page.
+  Skills have no level bars: the CV data has no levels to draw.
+--}}
+{{#*inline "cv-entries"}}
+  <div class="entries">
+    {{#each entries}}
+      <div class="entry">
+        <div class="e-head">
+          <div class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</div>
+          {{#if date}}<div class="e-date">{{date}}</div>{{/if}}
+        </div>
+        <div class="e-body">
+          {{#if subtitle}}<div class="e-sub">{{subtitle}}{{#if location}}<span class="e-loc"> · {{location}}</span>{{/if}}</div>{{else if location}}<div class="e-sub"><span class="e-loc">{{location}}</span></div>{{/if}}
+          {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+          {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+          {{> cv-bullets}}
+        </div>
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <svg class="deco deco-dots" viewBox="0 0 60 36" aria-hidden="true">
+      <g fill="currentColor">
+        <circle cx="3" cy="3" r="1.4"/><circle cx="13" cy="3" r="1.4"/><circle cx="23" cy="3" r="1.4"/><circle cx="33" cy="3" r="1.4"/><circle cx="43" cy="3" r="1.4"/>
+        <circle cx="8" cy="13" r="1.4"/><circle cx="18" cy="13" r="1.4"/><circle cx="28" cy="13" r="1.4"/><circle cx="38" cy="13" r="1.4"/>
+        <circle cx="3" cy="23" r="1.4"/><circle cx="13" cy="23" r="1.4"/><circle cx="23" cy="23" r="1.4"/>
+        <circle cx="8" cy="33" r="1.4"/>
+      </g>
+    </svg>
+    <svg class="deco deco-rings" viewBox="0 0 200 120" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="0.8">
+        <circle cx="150" cy="0" r="110"/><circle cx="150" cy="0" r="80"/>
+      </g>
+    </svg>
+    <header class="cv-header">
+      <div class="identity">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        {{#each mainSections}}{{#if (eq key "summary")}}<p class="intro">{{text}}</p>{{/if}}{{/each}}
+      </div>
+      {{#if contacts.length}}<div class="header-contacts">{{> cv-contacts}}</div>{{/if}}
+    </header>
+    <div class="columns">
+      <div class="main">{{#each mainSections}}{{#unless (eq key "summary")}}{{> section}}{{/unless}}{{/each}}</div>
+      <aside class="side">{{#each sidebarSections}}{{> section}}{{/each}}</aside>
+    </div>
+  </main>
+</body>
+</html>

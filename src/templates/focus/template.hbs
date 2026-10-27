@@ -1,0 +1,23 @@
+{{!-- "Focus" — Jake's layout with a headline under the name and a summary first. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      {{#if contacts.length}}
+        <p class="contact-line">
+          {{#each contacts}}<span class="contact-item">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/each}}
+        </p>
+      {{/if}}
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

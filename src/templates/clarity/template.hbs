@@ -1,0 +1,59 @@
+{{!--
+  "Clarity" — a big uppercase name with the title on the right of the same
+  line, a ruled contact line, and plain bold section headings. Jobs read role
+  and dates, then the employer; education sits in two columns, each degree
+  leading with its name, then the school, notes and dates; skills fill a
+  two-column bullet list.
+--}}
+{{#*inline "cv-entries"}}
+  <div class="entries">
+    {{#each entries}}
+      <div class="entry">
+        {{#if (eq ../key "education")}}
+          <div class="e-title">{{#if subtitle}}{{subtitle}}{{else}}{{title}}{{/if}}</div>
+          {{#if subtitle}}<div class="e-sub">{{title}}{{#if location}}, {{location}}{{/if}}</div>{{else if location}}<div class="e-sub">{{location}}</div>{{/if}}
+          {{#if meta}}<ul class="bullets"><li>{{meta}}</li></ul>{{/if}}
+          {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+          {{> cv-bullets}}
+          {{#if date}}<div class="e-date">{{date}}</div>{{/if}}
+        {{else}}
+          <div class="entry-head">
+            <div class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</div>
+            {{#if date}}<div class="e-date">{{date}}</div>{{/if}}
+            {{#if subtitle}}<div class="e-sub">{{subtitle}}</div>{{/if}}
+            {{#if location}}<div class="e-loc">{{location}}</div>{{/if}}
+            {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+          </div>
+          {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+          {{> cv-bullets}}
+        {{/if}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <div class="name-row">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      </div>
+      {{#if contacts.length}}
+        <ul class="contacts">
+          {{#each contacts}}
+            <li class="contact c-{{kind}}">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    </header>
+    {{#each sections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

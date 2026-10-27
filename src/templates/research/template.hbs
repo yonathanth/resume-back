@@ -1,0 +1,28 @@
+{{!-- "Research" — the undergraduate research CV: centered name, address left / links right, italic ruled sections. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Curriculum Vitae</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      <div class="head-cols">
+        <div class="head-left">
+          {{#if personal.title}}<div>{{personal.title}}</div>{{/if}}
+          {{#if personal.location}}<div>{{personal.location}}</div>{{/if}}
+        </div>
+        <div class="head-right">
+          {{#each contacts}}
+            {{#unless (eq kind "location")}}<div>{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</div>{{/unless}}
+          {{/each}}
+        </div>
+      </div>
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

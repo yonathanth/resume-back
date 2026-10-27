@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fitcv
+      POSTGRES_PASSWORD: fitcv
+      POSTGRES_DB: fitcv
+    ports:
+      - "5432:5432"
+    volumes:
+      - fitcv_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  fitcv_postgres_data:

@@ -1,0 +1,289 @@
+/* "Spark" — the home page's "After" resume: Geist, an orange accent, skill chips in a ruled sidebar. */
+
+:root {
+  --orange: #e2470b;
+  --dot: #ff5e1f;
+  --rule: #f1d9cc;
+  --ink: #1b1d22;
+  --body: #3a3f4a;
+  --muted: #5b6170;
+  --faint: #8a90a0;
+  --line: #e6e8eb;
+  --chip: #f4f5f7;
+}
+
+@page {
+  size: A4;
+  margin: 13mm 13mm 12mm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 13mm 13mm 12mm;
+}
+
+body {
+  font-family: "Geist", "Helvetica Neue", Arial, sans-serif;
+  font-size: 8.4pt;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+/* ---- header ---- */
+.cv-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16pt;
+  padding-bottom: 9pt;
+  border-bottom: 0.75pt solid var(--line);
+}
+
+h1 {
+  color: var(--ink);
+  font-size: 27pt;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.headline {
+  margin-top: 5pt;
+  color: var(--orange);
+  font-size: 9.6pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.contacts {
+  flex-shrink: 0;
+  max-width: 48%;
+  color: var(--muted);
+  font-size: 7.6pt;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.contact {
+  display: block;
+}
+
+/* ---- columns ---- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30%;
+  column-gap: 15pt;
+  margin-top: 11pt;
+}
+
+.side {
+  padding-left: 12pt;
+  border-left: 0.75pt solid #eceef1;
+}
+
+.cv-section + .cv-section {
+  margin-top: 11pt;
+}
+
+/* Headings trail off into a thin orange rule. */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6pt;
+  break-after: avoid;
+  margin-bottom: 5pt;
+  color: var(--orange);
+  font-size: 8.2pt;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  border-top: 0.75pt solid var(--rule);
+}
+
+.cv-text {
+  color: var(--body);
+}
+
+/* ---- entries ---- */
+.entry + .entry {
+  margin-top: 8pt;
+}
+
+.entry-head {
+  column-gap: 8pt;
+}
+
+.e-title {
+  color: var(--ink);
+  font-size: 9.2pt;
+  font-weight: 700;
+}
+
+.e-sub {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.e-date {
+  color: var(--faint);
+  font-size: 7.4pt;
+  font-weight: 500;
+}
+
+.e-loc,
+.e-meta {
+  color: var(--muted);
+  font-size: 7.6pt;
+}
+
+.e-desc {
+  margin-top: 1pt;
+}
+
+.bullets {
+  margin-top: 3pt;
+  padding-left: 0;
+  list-style: none;
+}
+
+.bullets li {
+  position: relative;
+  padding-left: 9pt;
+}
+
+.bullets li + li {
+  margin-top: 2pt;
+}
+
+.bullets li::before {
+  content: "";
+  position: absolute;
+  top: 0.6em;
+  left: 0;
+  width: 3pt;
+  height: 3pt;
+  border-radius: 50%;
+  background: var(--dot);
+}
+
+.is-compact .entry + .entry {
+  margin-top: 4pt;
+}
+
+/* ---- sidebar ---- */
+.side .entry-head {
+  display: block;
+}
+
+.side .e-title {
+  font-size: 8.2pt;
+}
+
+.side .e-sub {
+  display: block;
+  font-size: 7.6pt;
+  font-weight: 400;
+}
+
+.side .e-dot {
+  display: none;
+}
+
+.side .e-date {
+  text-align: left;
+  font-weight: 400;
+}
+
+.side .e-desc,
+.side .bullets,
+.side .cv-text {
+  font-size: 7.6pt;
+}
+
+/* Skills: a small gray group label over a row of chips. */
+.side .skill-group + .skill-group {
+  margin-top: 6pt;
+}
+
+.side .s-cat {
+  display: block;
+  margin-bottom: 3pt;
+  color: var(--faint);
+  font-size: 7.2pt;
+  font-weight: 600;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items,
+.side .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3pt;
+}
+
+.side .s-item,
+.side .tag {
+  display: inline-block;
+  padding: 1pt 4.5pt;
+  border-radius: 2.5pt;
+  background: var(--chip);
+  color: var(--body);
+  font-size: 7.2pt;
+  font-weight: 500;
+}
+
+.side .s-item + .s-item::before,
+.side .tag + .tag::before {
+  content: none;
+}
+
+/* Languages: name left, level right. */
+.side .lang {
+  display: flex;
+  justify-content: space-between;
+  gap: 6pt;
+  font-size: 7.6pt;
+}
+
+.side .lang + .lang {
+  margin-top: 1pt;
+}
+
+.side .lang .l-level {
+  color: var(--faint);
+  text-align: right;
+}
+
+.side .lang .l-level::before {
+  content: none;
+}
+
+.main .skill-group + .skill-group {
+  margin-top: 2pt;
+}
+
+.main .s-cat {
+  color: var(--ink);
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.reference + .reference {
+  margin-top: 6pt;
+}
+
+.r-name {
+  color: var(--ink);
+  font-weight: 700;
+}

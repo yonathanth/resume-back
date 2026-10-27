@@ -1,0 +1,105 @@
+{{!--
+  "Prose" — after the simple article-class CV with a blue centered name:
+  Times type, a one-line contact header, an untitled opening paragraph, and
+  sections ruled underneath where every item is a paragraph led by a blue
+  label ("\textBF{Label} --- text"), dates pushed right with \hfill.
+
+  The shared section partial is overridden: each item becomes a paragraph.
+--}}
+{{#*inline "dated"}}
+  <p class="item head"><span class="lead">{{> @partial-block}}</span>{{#if date}}<span class="date">{{date}}</span>{{/if}}</p>
+{{/inline}}
+
+{{#*inline "item-bullets"}}
+  {{#if bullets.length}}
+    <ul class="bullets">
+      {{#each bullets}}<li>{{#if label}}<span class="label">{{label}}</span> — {{/if}}{{text}}</li>{{/each}}
+    </ul>
+  {{/if}}
+{{/inline}}
+
+{{#*inline "section"}}
+  {{#if (eq key "summary")}}
+    <p class="intro">{{text}}</p>
+  {{else}}
+    <section class="cv-section cv-{{key}}">
+      <h2 class="sectitle">{{title}}</h2>
+      <div class="section-body">
+        {{#if (eq kind "text")}}<p class="item">{{text}}</p>{{/if}}
+
+        {{#if (eq kind "entries")}}
+          {{#if (eq key "education")}}
+            {{#each items}}
+              <div class="entry">
+                {{#> dated date=(dateRange start_date end_date)}}<span class="label">{{#if degree}}{{degree}}{{else}}{{institution}}{{/if}}</span>{{#if field}} in {{field}}{{/if}}{{#if degree}}{{#if institution}} – {{institution}}{{/if}}{{/if}}{{#if location}}, {{location}}{{/if}}{{/dated}}
+                {{#if gpa}}<p class="item">GPA: {{gpa}}{{#if honors}} · {{honors}}{{/if}}</p>{{else if honors}}<p class="item">{{honors}}</p>{{/if}}
+                {{> item-bullets}}
+              </div>
+            {{/each}}
+          {{else if (eq key "publications")}}
+            {{#each items}}
+              <p class="item">{{#if authors}}{{authors}}. {{/if}}<span class="label">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</span>{{#if venue}} — <em>{{venue}}</em>{{/if}}{{#if date}}, {{formatDate date}}{{/if}}.</p>
+            {{/each}}
+          {{else}}
+            {{#each entries}}
+              <div class="entry">
+                {{#> dated date=date}}<span class="label">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</span>{{#if subtitle}} — {{subtitle}}{{/if}}{{#if location}}, {{location}}{{/if}}{{/dated}}
+                {{#if meta}}<p class="item meta">{{meta}}</p>{{/if}}
+                {{#if description}}<p class="item">{{description}}</p>{{/if}}
+                {{> item-bullets}}
+              </div>
+            {{/each}}
+          {{/if}}
+        {{/if}}
+
+        {{#if (eq kind "skills")}}
+          {{#each groups}}
+            <p class="item">{{#if category}}<span class="label">{{category}}</span> — {{/if}}{{join items ", "}}</p>
+          {{/each}}
+        {{/if}}
+
+        {{#if (eq kind "languages")}}
+          {{#each items}}
+            <p class="item"><span class="label">{{language}}</span>{{#if proficiency}} — {{proficiency}}{{/if}}</p>
+          {{/each}}
+        {{/if}}
+
+        {{#if (eq kind "tags")}}<p class="item">{{join items ", "}}</p>{{/if}}
+
+        {{#if (eq kind "details")}}
+          {{#each items}}<p class="item"><span class="label">{{label}}</span> — {{value}}</p>{{/each}}
+        {{/if}}
+
+        {{#if (eq kind "references")}}
+          {{#each items}}
+            <p class="item"><span class="label">{{name}}</span>{{#if title}} — {{title}}{{/if}}{{#if organization}}, {{organization}}{{/if}}{{#if relationship}} ({{relationship}}){{/if}}{{#if email}} · <a class="link" href="mailto:{{email}}">{{email}}</a>{{/if}}{{#if phone}} · {{phone}}{{/if}}</p>
+          {{/each}}
+        {{/if}}
+      </div>
+    </section>
+  {{/if}}
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Curriculum Vitae</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      {{#if contacts.length}}
+        {{!-- The address leads, as in the original's "Address · email · website". --}}
+        <p class="contact-line">
+          {{#each contacts}}{{#if (eq kind "location")}}<span class="c-item">{{text}}</span>{{/if}}{{/each}}
+          {{#each contacts}}{{#unless (eq kind "location")}}<span class="c-item">{{#if href}}<a class="link" href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/unless}}{{/each}}
+        </p>
+      {{/if}}
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>

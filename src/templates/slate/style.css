@@ -1,0 +1,230 @@
+/* "Slate" — after LuxSleek-CV: Fira Sans, a dark blue sidebar, small-caps headings, inline entries. */
+
+:root {
+  --blue: #304263;
+  --blue-soft: #45566f;
+}
+
+/* The sidebar runs edge to edge, so the page itself has no printer margin. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 9.2pt;
+  line-height: 1.38;
+  color: #1f1f1f;
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 33% minmax(0, 1fr);
+  min-height: 297mm;
+}
+
+/* ---- left column ---- */
+.side {
+  background: var(--blue-soft);
+  color: #fff;
+}
+
+.side-top {
+  height: 5mm;
+  background: var(--blue);
+}
+
+.side-inner {
+  padding: 7mm 9% 10mm;
+}
+
+h1 {
+  font-size: 16pt;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.last {
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+
+.headline {
+  margin-top: 2pt;
+  font-size: 9pt;
+  opacity: 0.9;
+}
+
+.photo {
+  width: 62%;
+  aspect-ratio: 4 / 5;
+  margin: 10pt auto 4pt;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.side .cv-section {
+  margin-top: 13pt;
+}
+
+.side .section-title {
+  font-size: 10.5pt;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  border-bottom: 0.6pt solid rgba(255, 255, 255, 0.8);
+  padding-bottom: 1pt;
+  margin-bottom: 5pt;
+}
+
+.side .cv-text {
+  font-size: 8.8pt;
+}
+
+.side .contact {
+  align-items: flex-start;
+  margin-bottom: 3pt;
+  font-size: 8.5pt;
+  word-break: break-word;
+}
+
+.side .c-icon {
+  display: inline-flex;
+  margin-top: 2pt;
+}
+
+.side .d-row {
+  display: block;
+  margin-bottom: 3pt;
+}
+
+.side .details dt {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.side .details dd {
+  font-weight: 700;
+}
+
+.side .s-cat {
+  display: block;
+  margin-top: 4pt;
+  font-weight: 700;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items {
+  display: block;
+}
+
+.side .s-item {
+  display: list-item;
+  list-style: disc;
+  margin-left: 11pt;
+}
+
+.side .s-item + .s-item::before {
+  content: none;
+}
+
+.side .l-name {
+  font-weight: 700;
+}
+
+.side .lang .l-level::before {
+  content: " (";
+}
+
+.side .lang .l-level::after {
+  content: ")";
+}
+
+/* ---- right column ---- */
+.main {
+  padding: 9mm 9mm 10mm 8mm;
+}
+
+.main .cv-section {
+  margin-bottom: 11pt;
+}
+
+.main .section-title {
+  color: var(--blue);
+  font-size: 14pt;
+  font-weight: 400;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  border-bottom: 0.8pt solid var(--blue);
+  margin-bottom: 5pt;
+}
+
+.e-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.e-title {
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+}
+
+.e-sub {
+  font-style: italic;
+}
+
+.e-sub::before {
+  content: ", ";
+  font-style: normal;
+}
+
+.e-loc::before {
+  content: "\00a0(";
+}
+
+.e-loc::after {
+  content: ")";
+}
+
+.e-date {
+  margin-left: auto;
+  padding-left: 8pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.e-meta {
+  font-size: 8.5pt;
+  font-style: italic;
+}
+
+.main .entry {
+  margin-bottom: 6pt;
+}
+
+/* Details read as diamond-marked lines, like the LaTeX \smaller. */
+.main .bullets {
+  list-style: none;
+  padding-left: 0;
+  font-size: 8.8pt;
+}
+
+.main .bullets li::before,
+.main .e-desc::before {
+  content: "◇ ";
+}
+
+.main .e-desc {
+  font-size: 8.8pt;
+}
+
+.main .tag {
+  font-style: italic;
+}

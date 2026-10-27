@@ -1,0 +1,221 @@
+/* "Campus" — Arimo headings, Lora text, a gray header band and a light gray sidebar. */
+
+:root {
+  --band: #d9d9d9;
+  --side: #efefef;
+  --ink: #3f3f3f;
+  --body: #4a4a4a;
+}
+
+/* The band and sidebar run to the page edges. Each column re-applies its
+   padding on a second page (box-decoration-break), so text never touches
+   the top edge there. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: "Lora", Georgia, serif;
+  font-size: 8.3pt;
+  line-height: 1.45;
+  color: var(--body);
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 7mm 31% minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-height: 297mm;
+}
+
+/* ---- header band ---- */
+.cv-header {
+  grid-column: 1 / -1;
+  padding: 15mm 12mm 12mm;
+  background: var(--band);
+  text-align: center;
+}
+
+h1 {
+  color: var(--ink);
+  font-family: "Arimo", Arial, sans-serif;
+  font-size: 25pt;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin-top: 3pt;
+  color: #555;
+  font-size: 11pt;
+  font-style: italic;
+}
+
+/* ---- headings ---- */
+.section-title {
+  break-after: avoid;
+  color: var(--ink);
+  font-family: "Arimo", Arial, sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+/* ---- sidebar ---- */
+.side {
+  grid-column: 2;
+  padding: 9mm 6mm 10mm;
+  background: var(--side);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.side .section-title {
+  margin-bottom: 7pt;
+}
+
+.side .cv-section + .cv-section {
+  margin-top: 13pt;
+}
+
+/* A dotted rule between the profile and the contact details. */
+.side .cv-summary + .cv-contact {
+  margin-top: 14pt;
+  padding-top: 13pt;
+  border-top: 2.2pt dotted var(--ink);
+}
+
+.side .cv-text {
+  font-size: 8.4pt;
+}
+
+.side .contact {
+  align-items: flex-start;
+  gap: 7pt;
+  margin-bottom: 5pt;
+  font-family: "Arimo", Arial, sans-serif;
+  font-size: 7.8pt;
+  word-break: break-word;
+}
+
+.side .c-icon {
+  display: inline-flex;
+  margin-top: 1pt;
+  color: var(--ink);
+  font-size: 9pt;
+}
+
+.side .tag {
+  display: block;
+}
+
+.side .tag + .tag::before {
+  content: none;
+}
+
+/* ---- main column ---- */
+.main {
+  grid-column: 3;
+  padding: 8mm 12mm 10mm 9mm;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.main .cv-section + .cv-section {
+  margin-top: 12pt;
+}
+
+/* ▶ before each heading */
+.main .section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 7pt;
+  font-size: 10.5pt;
+}
+
+.main .section-title::before {
+  content: "";
+  flex-shrink: 0;
+  margin-right: 8pt;
+  border-left: 8pt solid var(--ink);
+  border-top: 5pt solid transparent;
+  border-bottom: 5pt solid transparent;
+}
+
+.entry + .entry {
+  margin-top: 7pt;
+}
+
+.e-org {
+  color: var(--ink);
+  font-size: 8.2pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.e-date {
+  text-align: left;
+  font-size: 7.9pt;
+}
+
+.cv-education .e-role {
+  font-style: italic;
+}
+
+.e-meta {
+  font-size: 8pt;
+  font-style: italic;
+}
+
+.e-desc,
+.bullets {
+  margin-top: 2pt;
+}
+
+.bullets {
+  padding-left: 12pt;
+}
+
+/* Skills and languages read one per line. */
+.main .skill-group + .skill-group {
+  margin-top: 2pt;
+}
+
+.main .skill-group:not(:has(.s-cat)) .s-item {
+  display: block;
+}
+
+.main .skill-group:not(:has(.s-cat)) .s-item + .s-item::before {
+  content: none;
+}
+
+.main .s-cat {
+  color: var(--ink);
+}
+
+.lang .l-level::before {
+  content: " (";
+}
+
+.lang .l-level::after {
+  content: ")";
+}
+
+.reference + .reference {
+  margin-top: 6pt;
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.r-name {
+  color: var(--ink);
+  font-weight: 700;
+}

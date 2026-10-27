@@ -1,0 +1,52 @@
+{{!--
+  "Spark" — the "After" resume from the home page: Geist, an orange accent,
+  the name and an orange title beside right-aligned contacts, headings that
+  trail off into a thin rule, orange-dot bullets, and a right sidebar of
+  skill chips, education and the shorter sections.
+  Overrides: entries read "Role · Company" beside the dates; sidebar entries
+  stack (title, then "where · when").
+--}}
+{{#*inline "cv-entries"}}
+  <div class="entries">
+    {{#each entries}}
+      <div class="entry">
+        <div class="entry-head">
+          <div class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}{{#if subtitle}} <span class="e-sub"><span class="e-dot">· </span>{{subtitle}}{{#if location}}<span class="e-loc">, {{location}}</span>{{/if}}</span>{{else if location}} <span class="e-sub"><span class="e-dot">· </span><span class="e-loc">{{location}}</span></span>{{/if}}</div>
+          {{#if date}}<div class="e-date">{{date}}</div>{{/if}}
+        </div>
+        {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+        {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+        {{> cv-bullets}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <div class="identity">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      </div>
+      {{#if contacts.length}}
+        <ul class="contacts">
+          {{#each contacts}}
+            <li class="contact c-{{kind}}">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    </header>
+    <div class="columns">
+      <div class="main">{{#each mainSections}}{{> section}}{{/each}}</div>
+      {{#if sidebarSections.length}}<aside class="side">{{#each sidebarSections}}{{> section}}{{/each}}</aside>{{/if}}
+    </div>
+  </main>
+</body>
+</html>

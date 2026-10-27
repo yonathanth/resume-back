@@ -1,0 +1,9 @@
+{{!-- Each skill is its own element, so a template can show a comma list (default) or chips. --}}
+<ul class="skill-groups">
+  {{#each groups}}
+    <li class="skill-group">
+      {{#if category}}<strong class="s-cat">{{category}}</strong>{{/if}}
+      <span class="s-items">{{#each items}}<span class="s-item">{{this}}</span>{{/each}}</span>
+    </li>
+  {{/each}}
+</ul>

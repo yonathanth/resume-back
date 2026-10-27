@@ -1,0 +1,64 @@
+{{!--
+  "Crest" — a navy header band with a gold name and icon contacts, then two
+  columns from the top: summary, experience, education and the rest (left),
+  and key skills, languages and interests (right, the registry's "sidebar").
+  Overrides: jobs read "Role, Company"; degrees lead with the degree, then
+  "Institution | dates"; references show labeled Phone/Email lines.
+--}}
+{{#*inline "cv-entries"}}
+  <div class="entries">
+    {{#each entries}}
+      <div class="entry">
+        {{#if (eq ../key "education")}}
+          <div class="e-title">{{#if subtitle}}{{subtitle}}{{else}}{{title}}{{/if}}</div>
+          <div class="e-line">{{#if subtitle}}{{title}}{{#if date}} | {{/if}}{{/if}}{{date}}{{#if location}}, {{location}}{{/if}}</div>
+        {{else}}
+          <div class="entry-head">
+            <div class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}{{#if subtitle}}, {{subtitle}}{{/if}}{{#if location}}<span class="e-loc"> · {{location}}</span>{{/if}}</div>
+            {{#if date}}<div class="e-date">{{date}}</div>{{/if}}
+          </div>
+        {{/if}}
+        {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+        {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+        {{> cv-bullets}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+{{#*inline "cv-references"}}
+  <div class="references">
+    {{#each items}}
+      <div class="reference">
+        <div class="r-name">{{name}}{{#if relationship}} <span class="r-rel">({{relationship}})</span>{{/if}}</div>
+        {{#if organization}}<div class="r-role">{{organization}}{{#if title}} / {{title}}{{/if}}</div>{{else if title}}<div class="r-role">{{title}}</div>{{/if}}
+        {{#if phone}}<div class="r-contact"><strong>Phone:</strong> {{phone}}</div>{{/if}}
+        {{#if email}}<div class="r-contact"><strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a></div>{{/if}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+      {{#if contacts.length}}{{> cv-contacts}}{{/if}}
+    </header>
+    <div class="content">
+      <div class="split">
+        <div class="split-main">
+          {{#each mainSections}}{{> section}}{{/each}}
+        </div>
+        {{#if sidebarSections.length}}<aside class="split-side">{{#each sidebarSections}}{{> section}}{{/each}}</aside>{{/if}}
+      </div>
+    </div>
+  </main>
+</body>
+</html>

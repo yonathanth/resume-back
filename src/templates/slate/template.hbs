@@ -1,0 +1,51 @@
+{{!--
+  "Slate" — after LuxSleek-CV: a full-height dark blue left column (name,
+  photo, profile, contacts, personal facts, skills) beside a white column.
+  Entries override the shared markup to read inline: "ROLE, Company (Place) … dates".
+--}}
+{{#*inline "cv-entries"}}
+  <div class="entries">
+    {{#each entries}}
+      <div class="entry">
+        <div class="e-line">
+          <span class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</span>
+          {{#if subtitle}}<span class="e-sub">{{subtitle}}</span>{{/if}}
+          {{#if location}}<span class="e-loc">{{location}}</span>{{/if}}
+          {{#if date}}<span class="e-date">{{date}}</span>{{/if}}
+        </div>
+        {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+        {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+        {{> cv-bullets}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}CV</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <aside class="side">
+      <div class="side-top"></div>
+      <div class="side-inner">
+        <h1><span class="first">{{firstNames personal.full_name}}</span> <span class="last">{{lastName personal.full_name}}</span></h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        {{#if photo}}<img class="photo" src="{{photo}}" alt="" />{{/if}}
+        {{#each sidebarSections}}{{#if (eq key "summary")}}{{> section}}{{/if}}{{/each}}
+        {{#if contacts.length}}
+          <section class="cv-section cv-contact">
+            <h2 class="section-title"><span class="section-label">Contact details</span></h2>
+            {{> cv-contacts}}
+          </section>
+        {{/if}}
+        {{#each sidebarSections}}{{#unless (eq key "summary")}}{{> section}}{{/unless}}{{/each}}
+      </div>
+    </aside>
+    <div class="main">{{#each mainSections}}{{> section}}{{/each}}</div>
+  </main>
+</body>
+</html>

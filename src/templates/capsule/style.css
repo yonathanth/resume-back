@@ -1,0 +1,289 @@
+/* "Capsule" — Poppins, a rounded slate sidebar, pill headings, soft blue section boxes. */
+
+:root {
+  --navy: #1f3a8a;
+  --slate: #536a90;
+  --slate-dark: #4a5f82;
+  --box: #eef2f9;
+  --ink: #1d1d1f;
+  --body: #4b4f58;
+}
+
+@page {
+  size: A4;
+  margin: 9mm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 9mm;
+}
+
+body {
+  font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  font-size: 8.3pt;
+  line-height: 1.45;
+  color: var(--body);
+}
+
+/* The sidebar panel runs to the foot of the page even on a short CV. */
+.layout {
+  display: grid;
+  grid-template-columns: 31% minmax(0, 1fr);
+  column-gap: 7mm;
+  min-height: calc(297mm - 18mm - 1mm);
+}
+
+/* ---- sidebar ---- */
+.side {
+  background: var(--slate);
+  color: #fff;
+  border-radius: 14pt;
+  padding: 9mm 6mm 8mm;
+  /* When the CV runs onto a second page, the panel there is rounded too. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.side .cv-section + .cv-section {
+  margin-top: 15pt;
+}
+
+.side .section-title {
+  display: block;
+  break-after: avoid;
+  width: 82%;
+  margin: 0 auto 8pt;
+  padding: 2.5pt 8pt;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.side .contact {
+  align-items: flex-start;
+  gap: 6pt;
+  margin-bottom: 4pt;
+  font-size: 7.8pt;
+  word-break: break-word;
+}
+
+.side .c-icon {
+  display: inline-flex;
+  margin-top: 1.5pt;
+}
+
+.side .skill-group + .skill-group {
+  margin-top: 4pt;
+}
+
+.side .s-cat {
+  display: block;
+  font-weight: 700;
+}
+
+.side .s-cat::after {
+  content: "";
+}
+
+.side .s-items {
+  display: block;
+}
+
+.side .s-item {
+  display: list-item;
+  list-style: disc;
+  margin-left: 11pt;
+  margin-bottom: 2pt;
+}
+
+.side .s-item + .s-item::before {
+  content: none;
+}
+
+/* Grouped skills read as a comma list under each group name — a bullet per
+   skill would run the sidebar off the page. A plain list keeps its bullets. */
+.side .skill-group:has(.s-cat) .s-item {
+  display: inline;
+  margin: 0;
+}
+
+.side .skill-group:has(.s-cat) .s-item + .s-item::before {
+  content: ", ";
+}
+
+.side .lang,
+.side .tag {
+  display: list-item;
+  list-style: disc;
+  margin-left: 11pt;
+  margin-bottom: 2pt;
+}
+
+.side .tag + .tag::before {
+  content: none;
+}
+
+.side .lang .l-level::before {
+  content: " (";
+}
+
+.side .lang .l-level::after {
+  content: ")";
+}
+
+.side .reference {
+  break-inside: avoid;
+}
+
+.side .reference + .reference {
+  margin-top: 7pt;
+}
+
+.side .r-name {
+  font-size: 8.5pt;
+  font-weight: 700;
+}
+
+.side .r-role {
+  font-size: 7.6pt;
+}
+
+.side .r-contact {
+  font-size: 7pt;
+  word-break: break-word;
+}
+
+.side .cv-text {
+  font-size: 7.8pt;
+}
+
+.side .details dt {
+  font-weight: 700;
+}
+
+.side .entries {
+  font-size: 7.8pt;
+}
+
+/* ---- main column ---- */
+.main {
+  padding-top: 1mm;
+}
+
+.cv-header {
+  margin-bottom: 13pt;
+}
+
+h1 {
+  color: var(--navy);
+  font-size: 29pt;
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+h1 .first,
+h1 .last {
+  display: block;
+}
+
+h1 .last {
+  font-weight: 700;
+}
+
+.headline {
+  margin-top: 4pt;
+  color: var(--ink);
+  font-size: 14pt;
+  letter-spacing: 0.02em;
+}
+
+.main .cv-section {
+  margin-bottom: 12pt;
+}
+
+/* "table" shrinks to fit like inline-block but stays a block, so the
+   heading can be kept on the same page as its box. */
+.main .section-title {
+  display: table;
+  break-after: avoid;
+  margin-bottom: 6pt;
+  padding: 2.5pt 13pt;
+  border-radius: 999px;
+  background: var(--slate-dark);
+  color: #fff;
+  font-size: 9.5pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.main .section-body {
+  padding: 8pt 10pt;
+  border-radius: 7pt;
+  background: var(--box);
+}
+
+.main .cv-text {
+  text-align: justify;
+}
+
+.main .entry + .entry {
+  margin-top: 10pt;
+}
+
+.main .e-title {
+  color: var(--navy);
+  font-size: 8.6pt;
+}
+
+.main .e-date {
+  color: var(--ink);
+  font-size: 8.3pt;
+}
+
+.main .e-sub {
+  color: var(--ink);
+  font-size: 8.6pt;
+  font-weight: 700;
+}
+
+.main .e-loc,
+.main .e-meta {
+  font-size: 7.6pt;
+}
+
+.main .e-desc,
+.main .bullets {
+  margin-top: 3pt;
+  font-size: 7.6pt;
+}
+
+.main .bullets {
+  padding-left: 11pt;
+}
+
+.main .bullets li + li {
+  margin-top: 1pt;
+}
+
+.main .is-compact .entry + .entry {
+  margin-top: 5pt;
+}
+
+.main .s-cat {
+  color: var(--ink);
+}
+
+.main .skill-group + .skill-group {
+  margin-top: 2pt;
+}

@@ -1,0 +1,69 @@
+{{!--
+  "Timeline" — a navy sidebar (contacts, education, skills, languages) under
+  ruled serif headings, beside a main column that opens with the name, title
+  and summary. Work experience hangs off a vertical line, each job marked
+  with a ring: dates, employer in serif, role in bold, then bullets.
+  No photo: the sidebar starts straight with the contact details.
+  Overrides: sidebar entries read top-down; references show labeled lines.
+--}}
+{{#*inline "cv-entries"}}
+  <div class="entries{{#if (eq key "experience")}} is-timeline{{/if}}">
+    {{#each entries}}
+      <div class="entry">
+        {{#if (eq ../key "experience")}}
+          {{#if date}}<div class="e-date">{{date}}{{#if location}} · {{location}}{{/if}}</div>{{/if}}
+          <div class="e-org">{{#if subtitle}}{{subtitle}}{{else}}{{title}}{{/if}}</div>
+          {{#if subtitle}}<div class="e-role">{{title}}</div>{{/if}}
+        {{else}}
+          <div class="e-title">{{#if url}}<a href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}</div>
+          {{#if subtitle}}<div class="e-sub">{{subtitle}}</div>{{/if}}
+          {{#if date}}<div class="e-date">{{date}}{{#if location}} · {{location}}{{/if}}</div>{{/if}}
+        {{/if}}
+        {{#if meta}}<div class="e-meta">{{meta}}</div>{{/if}}
+        {{#if description}}<p class="e-desc">{{description}}</p>{{/if}}
+        {{> cv-bullets}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+{{#*inline "cv-references"}}
+  <div class="references">
+    {{#each items}}
+      <div class="reference">
+        <div class="r-name">{{name}}{{#if relationship}} <span class="r-rel">({{relationship}})</span>{{/if}}</div>
+        {{#if organization}}<div class="r-role">{{organization}}{{#if title}} / {{title}}{{/if}}</div>{{else if title}}<div class="r-role">{{title}}</div>{{/if}}
+        {{#if phone}}<div class="r-contact"><strong>Phone:</strong> {{phone}}</div>{{/if}}
+        {{#if email}}<div class="r-contact"><strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a></div>{{/if}}
+      </div>
+    {{/each}}
+  </div>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    <aside class="side">
+      {{#if contacts.length}}
+        <section class="cv-section cv-contact">
+          <h2 class="section-title"><span class="section-label">Contact</span></h2>
+          <div class="section-body">{{> cv-contacts}}</div>
+        </section>
+      {{/if}}
+      {{#each sidebarSections}}{{> section}}{{/each}}
+    </aside>
+    <div class="main">
+      <header class="cv-header">
+        <h1>{{personal.full_name}}</h1>
+        {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
+        {{#each mainSections}}{{#if (eq key "summary")}}<p class="intro">{{text}}</p>{{/if}}{{/each}}
+      </header>
+      {{#each mainSections}}{{#unless (eq key "summary")}}{{> section}}{{/unless}}{{/each}}
+    </div>
+  </main>
+</body>
+</html>

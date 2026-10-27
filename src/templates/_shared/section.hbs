@@ -1,0 +1,18 @@
+{{!--
+  Renders one section from the view model built in render.service.ts. Every
+  template that loops `{{#each mainSections}}{{> section}}{{/each}}` gets the
+  same semantic markup; its own CSS decides the look. Override any cv-* partial
+  with an inline partial of the same name for a layout CSS can't express.
+--}}
+<section class="cv-section cv-{{key}}{{#if compact}} is-compact{{/if}}">
+  <h2 class="section-title"><span class="section-icon">{{icon icon}}</span><span class="section-label">{{title}}</span></h2>
+  <div class="section-body">
+    {{#if (eq kind "text")}}{{> cv-text}}{{/if}}
+    {{#if (eq kind "entries")}}{{> cv-entries}}{{/if}}
+    {{#if (eq kind "skills")}}{{> cv-skills}}{{/if}}
+    {{#if (eq kind "languages")}}{{> cv-languages}}{{/if}}
+    {{#if (eq kind "tags")}}{{> cv-tags}}{{/if}}
+    {{#if (eq kind "details")}}{{> cv-details}}{{/if}}
+    {{#if (eq kind "references")}}{{> cv-references}}{{/if}}
+  </div>
+</section>

@@ -1,0 +1,208 @@
+/* "Clarity" — Montserrat, a large uppercase name, plain bold headings, two-column education and skills. */
+
+:root {
+  --ink: #111;
+  --body: #2b2b2b;
+  --rule: #c9c9c9;
+}
+
+@page {
+  size: A4;
+  margin: 12mm 14mm 13mm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 12mm 14mm 13mm;
+}
+
+body {
+  font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  font-size: 8.1pt;
+  line-height: 1.45;
+  color: var(--body);
+}
+
+/* ---- header ---- */
+.name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4pt 16pt;
+  padding-bottom: 4pt;
+  border-bottom: 0.8pt solid var(--rule);
+}
+
+h1 {
+  color: var(--ink);
+  font-size: 27pt;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.headline {
+  padding-bottom: 2pt;
+  color: var(--ink);
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 5pt;
+  color: var(--ink);
+  font-size: 8pt;
+}
+
+.contact {
+  display: block;
+}
+
+.contact + .contact::before {
+  content: "|";
+  margin: 0 4pt;
+}
+
+/* ---- sections ---- */
+.cv-section {
+  margin-top: 13pt;
+}
+
+.section-title {
+  break-after: avoid;
+  margin-bottom: 6pt;
+  color: var(--ink);
+  font-size: 10.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.entry + .entry {
+  margin-top: 9pt;
+}
+
+.e-title,
+.e-date {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.e-loc,
+.e-meta {
+  font-size: 7.6pt;
+  color: #555;
+}
+
+.e-desc,
+.bullets {
+  margin-top: 2pt;
+}
+
+.bullets {
+  padding-left: 13pt;
+}
+
+.is-compact .entry + .entry {
+  margin-top: 5pt;
+}
+
+/* Education: two columns of degrees, dates at the foot of each. */
+.cv-education .entries {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10pt 18pt;
+}
+
+.cv-education .entry + .entry {
+  margin-top: 0;
+}
+
+.cv-education .e-date {
+  margin-top: 2pt;
+  text-align: left;
+}
+
+/* Skills: a two-column bullet list. */
+.cv-skills .skill-groups {
+  columns: 2;
+  column-gap: 18pt;
+}
+
+.cv-skills .skill-group {
+  display: list-item;
+  list-style: disc;
+  margin-left: 13pt;
+  break-inside: avoid;
+}
+
+.cv-skills .skill-group + .skill-group {
+  margin-top: 2pt;
+}
+
+/* A plain skills list (one group, no name): each skill its own bullet,
+   the list itself split into the two columns. */
+.cv-skills .skill-groups:not(:has(.s-cat)) {
+  columns: auto;
+}
+
+.cv-skills .skill-group:not(:has(.s-cat)) {
+  display: block;
+  margin-left: 0;
+  break-inside: auto;
+}
+
+.cv-skills .skill-group:not(:has(.s-cat)) .s-items {
+  display: block;
+  columns: 2;
+  column-gap: 18pt;
+}
+
+.cv-skills .skill-group:not(:has(.s-cat)) .s-item {
+  display: list-item;
+  list-style: disc;
+  margin-left: 13pt;
+  margin-bottom: 2pt;
+  break-inside: avoid;
+}
+
+.cv-skills .skill-group:not(:has(.s-cat)) .s-item + .s-item::before {
+  content: none;
+}
+
+.s-cat {
+  color: var(--ink);
+}
+
+.languages {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.lang + .lang::before {
+  content: "|";
+  margin: 0 6pt;
+}
+
+.l-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.reference {
+  break-inside: avoid;
+}
+
+.references {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8pt 18pt;
+}
+
+.r-name {
+  font-weight: 700;
+  color: var(--ink);
+}

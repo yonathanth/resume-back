@@ -1,0 +1,116 @@
+/* "Scholar" — after Charles Rambo's academic CV: a Palatino-style serif, photo + rule header, small-caps sections. */
+
+@page {
+  size: A4;
+  margin: 1.2cm 1.5cm;
+}
+
+body.preview .page,
+body.thumbnail .page {
+  padding: 1.2cm 1.5cm;
+}
+
+body {
+  font-family: "Libertinus Serif", "Palatino Linotype", Palatino, "Book Antiqua", serif;
+  font-size: 10.5pt;
+  line-height: 1.28;
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 16pt;
+  margin-bottom: 10pt;
+}
+
+.photo {
+  width: 3cm;
+  height: 3cm;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.divider {
+  align-self: stretch;
+  width: 0.6pt;
+  background: #000;
+}
+
+h1 {
+  font-size: 25pt;
+  font-weight: 700;
+  font-variant: small-caps;
+  line-height: 1.1;
+}
+
+.headline {
+  margin-top: 1pt;
+  font-style: italic;
+}
+
+.id-contacts {
+  list-style: none;
+  margin-top: 3pt;
+  font-size: 9.5pt;
+  line-height: 1.35;
+}
+
+.id-contacts a {
+  text-decoration: underline;
+}
+
+.cv-section {
+  margin-top: 9pt;
+}
+
+.section-title {
+  font-size: 12.5pt;
+  font-weight: 400;
+  font-variant: small-caps;
+  border-bottom: 0.6pt solid #000;
+  padding-bottom: 1pt;
+  margin-bottom: 4pt;
+}
+
+.section-body {
+  padding-left: 0.5cm;
+}
+
+.entry {
+  margin-bottom: 5pt;
+}
+
+.e-sub,
+.e-loc,
+.e-meta {
+  font-size: 9.5pt;
+}
+
+.e-meta {
+  font-style: italic;
+}
+
+.e-desc {
+  font-size: 9.5pt;
+}
+
+.bullets {
+  margin-top: 2pt;
+  font-size: 9.5pt;
+}
+
+.skill-groups,
+.languages,
+.tags,
+.details,
+.references {
+  font-size: 9.5pt;
+}
+
+.s-cat {
+  font-weight: 700;
+}
+
+.is-compact .entry {
+  margin-bottom: 3pt;
+}

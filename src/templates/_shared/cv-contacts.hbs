@@ -1,0 +1,10 @@
+{{!-- Email, phone, location, then links — icons and labels are hidden unless a template shows them. --}}
+<ul class="contacts">
+  {{#each contacts}}
+    <li class="contact c-{{kind}}">
+      <span class="c-icon">{{icon icon}}</span>
+      {{#if label}}<span class="c-label">{{label}}</span>{{/if}}
+      <span class="c-text">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>
+    </li>
+  {{/each}}
+</ul>

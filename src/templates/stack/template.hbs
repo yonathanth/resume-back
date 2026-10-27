@@ -1,0 +1,165 @@
+{{!--
+  "Stack" — after Nanu Panchamurthy's Rezume (MIT; itself based on
+  sb2nov/resume): Source Sans, a two-row header table, blue small-caps
+  sections over a black rule, and the original's heading macros:
+    \resumeQuadHeading      role | dates / company | location (experience, education)
+    \resumeQuadHeadingChild a further role at the same company
+    \resumeTrioHeading      name | tech stack | source link (projects)
+    \resumeSectionType      Category : items (skills, languages)
+  The summary section is titled with the person's headline, as in the original.
+
+  The shared section partial is overridden so each section uses those macros.
+--}}
+{{#*inline "items"}}
+  {{#if bullets.length}}
+    <ul class="items">
+      {{#each bullets}}<li>{{#if label}}<strong>{{label}}:</strong> {{/if}}{{text}}</li>{{/each}}
+    </ul>
+  {{/if}}
+{{/inline}}
+
+{{#*inline "quad"}}
+  <li class="heading">
+    <div class="quad">
+      <strong class="q1">{{> @partial-block}}</strong>
+      <span class="q2">{{right}}</span>
+      {{#if sub}}<em class="q3">{{sub}}</em>{{/if}}
+      {{#if subRight}}<em class="q4">{{subRight}}</em>{{/if}}
+    </div>
+    {{> items}}
+  </li>
+{{/inline}}
+
+{{#*inline "section"}}
+  <section class="cv-section cv-{{key}}">
+    <h2 class="section-title">{{#if (eq key "summary")}}{{#if @root.personal.title}}{{@root.personal.title}}{{else}}{{title}}{{/if}}{{else}}{{title}}{{/if}}</h2>
+
+    {{#if (eq kind "text")}}<p class="summary">{{text}}</p>{{/if}}
+
+    {{#if (eq kind "skills")}}
+      <ul class="headings">
+        {{#each groups}}
+          <li class="type-row">{{#if category}}<strong class="t-name">{{category}}</strong><span class="t-sep">:</span>{{/if}}<span class="t-value">{{join items ", "}}</span></li>
+        {{/each}}
+      </ul>
+    {{/if}}
+
+    {{#if (eq kind "languages")}}
+      <ul class="headings">
+        {{#each items}}
+          <li class="type-row"><strong class="t-name">{{language}}</strong><span class="t-sep">:</span><span class="t-value">{{proficiency}}</span></li>
+        {{/each}}
+      </ul>
+    {{/if}}
+
+    {{#if (eq kind "tags")}}<p class="summary">{{join items ", "}}</p>{{/if}}
+
+    {{#if (eq kind "details")}}
+      <ul class="headings">
+        {{#each items}}<li class="type-row"><strong class="t-name">{{label}}</strong><span class="t-sep">:</span><span class="t-value">{{value}}</span></li>{{/each}}
+      </ul>
+    {{/if}}
+
+    {{#if (eq kind "entries")}}
+      {{#if (eq key "experience")}}
+        <ul class="headings">
+          {{#each items}}
+            {{#if (sameAsPrevious ../items @index "company")}}
+              <li class="heading child">
+                <div class="quad"><strong class="q1">{{role}}</strong><span class="q2">{{dateRange start_date end_date}}</span></div>
+                {{> items}}
+              </li>
+            {{else}}
+              {{#> quad right=(dateRange start_date end_date) sub=company subRight=location}}{{#if url}}<a href="{{href url}}">{{role}}</a>{{else}}{{role}}{{/if}}{{/quad}}
+            {{/if}}
+          {{/each}}
+        </ul>
+      {{else if (eq key "education")}}
+        <ul class="headings">
+          {{#each items}}
+            <li class="heading">
+              <div class="quad">
+                <strong class="q1">{{#if institution}}{{institution}}{{else}}{{degree}}{{/if}}</strong>
+                <span class="q2">{{location}}</span>
+                <em class="q3">{{#if institution}}{{degree}}{{#if field}} in {{field}}{{/if}}{{else}}{{field}}{{/if}}{{#if gpa}}<span class="upright"> · GPA: {{gpa}}</span>{{/if}}</em>
+                <em class="q4">{{dateRange start_date end_date}}</em>
+              </div>
+              {{#if honors}}<ul class="items"><li>{{honors}}</li></ul>{{/if}}
+              {{> items}}
+            </li>
+          {{/each}}
+        </ul>
+      {{else if (eq key "projects")}}
+        <ul class="headings">
+          {{#each items}}
+            <li class="heading">
+              <div class="trio">
+                <strong class="t1">{{#if url}}<a class="u" href="{{href url}}">{{name}}</a>{{else}}{{name}}{{/if}}</strong>
+                <em class="t2">{{join tech ", "}}</em>
+                <span class="t3">{{#if url}}<a class="u" href="{{href url}}">{{displayUrl url}}</a>{{/if}}</span>
+              </div>
+              {{#if subtitle}}<p class="p-sub">{{subtitle}}</p>{{/if}}
+              {{#if bullets.length}}{{> items}}{{else if description}}<ul class="items"><li>{{description}}</li></ul>{{/if}}
+            </li>
+          {{/each}}
+        </ul>
+      {{else if (eq key "volunteering")}}
+        <ul class="headings">
+          {{#each items}}
+            {{#> quad right=(dateRange start_date end_date) sub=organization subRight=location}}{{#if role}}{{role}}{{else}}{{organization}}{{/if}}{{/quad}}
+          {{/each}}
+        </ul>
+      {{else if (eq key "research")}}
+        <ul class="headings">
+          {{#each items}}{{#> quad right=(dateRange start_date end_date) sub=organization subRight=location}}{{title}}{{/quad}}{{/each}}
+        </ul>
+      {{else if (eq key "activities")}}
+        <ul class="headings">
+          {{#each items}}{{#> quad right=(dateRange start_date end_date) sub=organization subRight=location}}{{title}}{{/quad}}{{/each}}
+        </ul>
+      {{else}}
+        {{!-- \resumeItem lists ("Others"): certifications, awards, publications... --}}
+        <ul class="items top">
+          {{#each entries}}
+            <li>
+              {{#if url}}<a class="u" href="{{href url}}">{{title}}</a>{{else}}{{title}}{{/if}}{{#if subtitle}} — {{subtitle}}{{/if}}{{#if meta}} <em>({{meta}})</em>{{/if}}{{#if date}}<span class="i-date">{{date}}</span>{{/if}}
+              {{#if description}}<div class="i-desc">{{description}}</div>{{/if}}
+            </li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq kind "references")}}
+      <ul class="items top">
+        {{#each items}}
+          <li><strong>{{name}}</strong>{{#if title}} — {{title}}{{/if}}{{#if organization}}, {{organization}}{{/if}}{{#if email}} | <a class="u" href="mailto:{{email}}">{{email}}</a>{{/if}}{{#if phone}} | {{phone}}{{/if}}</li>
+        {{/each}}
+      </ul>
+    {{/if}}
+  </section>
+{{/inline}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{#if personal.full_name}}{{personal.full_name}} – {{/if}}Resume</title>
+  <style>{{{styles}}}</style>
+</head>
+<body class="{{mode}}">
+  <main class="page">
+    {{!-- The original's contact tabular: name | location, links | email & mobile. --}}
+    <header class="cv-header">
+      <h1>{{personal.full_name}}</h1>
+      <span class="h-right">{{#if personal.location}}Location: {{personal.location}}{{/if}}</span>
+      <span class="h-links">
+        {{#each personal.links}}{{#if @index}} | {{/if}}<a class="u" href="{{href url}}">{{#if label}}{{label}}{{else}}{{displayUrl url}}{{/if}}</a>{{/each}}
+      </span>
+      <span class="h-right">
+        {{#if personal.email}}Email: <a class="u" href="mailto:{{personal.email}}">{{personal.email}}</a>{{/if}}{{#if personal.phone}}{{#if personal.email}} | {{/if}}Mobile: {{personal.phone}}{{/if}}
+      </span>
+    </header>
+    {{#each mainSections}}{{> section}}{{/each}}
+  </main>
+</body>
+</html>
