@@ -254,6 +254,9 @@ interface ChargeTokenPayload {
   f: FlowType;
   p: CvUnlockProduct | null;
   t: PlanTier | null;
+  /** What the analysis spent, so a save that can't use it can give it back (absent on older tokens). */
+  k?: GenerationCharge["kind"];
+  pk?: string | null;
   exp: number;
 }
 
@@ -267,14 +270,15 @@ export function createChargeToken(userId: string, charge: GenerationCharge): str
     f: charge.flowType,
     p: charge.lock?.product ?? null,
     t: charge.lock?.tier ?? null,
+    k: charge.kind,
+    pk: charge.periodKey,
     exp: Date.now() + TOKEN_TTL_MS,
   };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   return `${body}.${sign(body)}`;
 }
 
-/** The charge a token carries, or null when it's invalid, expired or someone else's. */
-export function readChargeToken(token: string, userId: string): Pick<GenerationCharge, "flowType" | "lock"> | null {
+function readPayload(token: string, userId: string): ChargeTokenPayload | null {
   const [body, signature] = token.split(".");
   if (!body || !signature) return null;
   const expected = sign(body);
@@ -284,9 +288,49 @@ export function readChargeToken(token: string, userId: string): Pick<GenerationC
   try {
     const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as ChargeTokenPayload;
     if (payload.u !== userId || payload.exp < Date.now()) return null;
-    const lock = isCvUnlockProduct(payload.p) && isPlanTier(payload.t) ? { product: payload.p, tier: payload.t } : null;
-    return { flowType: payload.f, lock };
+    return payload;
   } catch {
     return null;
   }
+}
+
+/** The charge a token carries, or null when it's invalid, expired or someone else's. */
+export function readChargeToken(token: string, userId: string): Pick<GenerationCharge, "flowType" | "lock"> | null {
+  const payload = readPayload(token, userId);
+  if (!payload) return null;
+  const lock = isCvUnlockProduct(payload.p) && isPlanTier(payload.t) ? { product: payload.p, tier: payload.t } : null;
+  return { flowType: payload.f, lock };
+}
+
+// A token's charge is settled once: kept by the first save that lands, or given
+// back when the save can't use what the analysis produced. Kept in memory for
+// the token's lifetime (one server process); after a restart a token simply
+// can't be refunded any more, which errs on the side of keeping the charge.
+const settledTokens = new Map<string, number>();
+
+function settle(token: string, payload: ChargeTokenPayload): boolean {
+  const now = Date.now();
+  for (const [key, expiresAt] of settledTokens) if (expiresAt < now) settledTokens.delete(key);
+  const key = token.slice(token.lastIndexOf(".") + 1);
+  if (settledTokens.has(key)) return false;
+  settledTokens.set(key, payload.exp);
+  return true;
+}
+
+/** A save used this token's charge: it can no longer be refunded. */
+export function keepChargeToken(token: string, userId: string): void {
+  const payload = readPayload(token, userId);
+  if (payload) settle(token, payload);
+}
+
+/**
+ * A save couldn't use what the analysis behind this token produced: gives
+ * back what that analysis spent — once per token, and never after a save kept it.
+ */
+export async function refundChargeToken(token: string, userId: string): Promise<boolean> {
+  const payload = readPayload(token, userId);
+  if (!payload?.k || !settle(token, payload)) return false;
+  const charged = payload.k === "free" || payload.k === "plan";
+  await refundGeneration(userId, { kind: payload.k, flowType: payload.f, charged, periodKey: payload.pk ?? null, lock: null });
+  return charged;
 }

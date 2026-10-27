@@ -37,6 +37,8 @@ import {
   lockOf,
   mergeLocks,
   readChargeToken,
+  keepChargeToken,
+  refundChargeToken,
   refundGeneration,
   FeatureUnavailableError,
   ProFeatureRequiredError,
@@ -394,8 +396,8 @@ export async function cvRoutes(app: FastifyInstance) {
     };
 
     let result: AnalyzeResult | RoleMismatch;
+    const profileDefaults = await getProfileDefaults(request.userId);
     try {
-      const profileDefaults = await getProfileDefaults(request.userId);
       result = await withAiUsageContext({ userId: request.userId, flowType: parsed.data.flowType }, () =>
         generateCVContent({ ...aiInput, templateId, profileDefaults })
       );
@@ -418,6 +420,17 @@ export async function cvRoutes(app: FastifyInstance) {
     if (isRoleMismatch(result)) {
       await undoCharge();
       return reply.send({ data: { mismatch: true, reason: result.reason, missing: result.missing }, error: null });
+    }
+
+    // The save (POST /cv/:id/generate) runs this same check before persisting.
+    // A result it would turn away is never charged: the user hasn't got a CV.
+    const identity = aiInput.name || aiInput.email ? { name: aiInput.name, email: aiInput.email } : undefined;
+    const saveCheck = validateGeneratedCv(result.candidateData, { templateId, userIdentity: identity, profileDefaults });
+    if (!saveCheck.success) {
+      await undoCharge();
+      recordInvalidOutput(new AIInvalidOutputError(saveCheck.error.issues.map((i) => i.message).join("; ")), request.userId, parsed.data.flowType);
+      request.log.error({ issues: saveCheck.error.issues }, "AI CV analysis produced content the save would reject");
+      return sendError(reply, 502, "AI_GENERATION_FAILED", "AI analysis failed. Please try again.");
     }
 
     // `billing` tells the flow when this CV will need paying for at download.
@@ -576,6 +589,10 @@ export async function cvRoutes(app: FastifyInstance) {
     });
     if (!validation.success) {
       await refundGeneration(request.userId, charge);
+      // Content analyzed (and paid for) by POST /cv/analyze that can't be saved: give that charge back too.
+      if (parsed.data.analyzedContent && parsed.data.chargeToken) {
+        await refundChargeToken(parsed.data.chargeToken, request.userId);
+      }
       request.log.error({ issues: validation.error.issues }, "AI generated content failed schema validation");
       return sendError(
         reply,
@@ -607,6 +624,9 @@ export async function cvRoutes(app: FastifyInstance) {
         ...scoreFields({ content, jobDescription, jobRequirements, templateId: document.templateId }),
       },
     });
+
+    // The user has their CV now: the analysis's charge stays spent.
+    if (parsed.data.chargeToken) keepChargeToken(parsed.data.chargeToken, request.userId);
 
     request.log.info(
       { cvDocumentId: id, ruleVersion: CV_AI_RULE_VERSION, enhancementLevel: parsed.data.enhancementLevel },
