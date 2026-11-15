@@ -117,6 +117,35 @@ function withRequiredPersonalQuestions(candidateData: unknown, questions: unknow
   return [...added, ...questions];
 }
 
+// A CV can't be downloaded without these (POST /cv/:id/finalize), and the AI
+// leaves them empty rather than invent them when the material has none.
+const CORE_SECTION_QUESTIONS = [
+  {
+    key: "experience",
+    contentKeys: ["experience"],
+    question:
+      "What work experience should your CV include? For each role, add the company, your title, the dates and what you did. Internships, volunteering and freelance work count too.",
+    reason: "We couldn't find any work experience in what you shared, and a CV needs at least one entry.",
+  },
+  {
+    key: "skills",
+    contentKeys: ["skills", "skillGroups"],
+    question: "What are your main skills? List the tools, technologies or strengths you're best at.",
+    reason: "We couldn't find any skills in what you shared, and a CV needs at least one.",
+  },
+] as const;
+
+/** Asks for experience / skills when the AI found none, ahead of the optional questions. */
+function withCoreSectionQuestions(candidateData: unknown, questions: unknown[]): unknown[] {
+  const content = isPlainObject(candidateData) ? candidateData : {};
+  const askedIds = new Set(questions.map((q) => (isPlainObject(q) ? q.id : undefined)));
+  const added = CORE_SECTION_QUESTIONS.filter(
+    ({ key, contentKeys }) =>
+      !askedIds.has(`section_${key}`) && contentKeys.every((k) => !Array.isArray(content[k]) || content[k].length === 0)
+  ).map(({ key, question, reason }) => ({ id: `section_${key}`, question, reason, type: "textarea", required: false }));
+  return [...added, ...questions];
+}
+
 /**
  * One question per section the template marks `askIfMissing` when the user's
  * material produced nothing for it. Ids are `section_<key>`; the frontend
@@ -299,18 +328,21 @@ export function sanitizeAnalyzeResult(data: unknown, context: GeneratedCvContext
     ? sanitizeGeneratedCv(data.candidateData, context)
     : data.candidateData;
 
-  // Order: required personal fields, entry names/dates, the model's own
-  // questions, then empty-section prompts — capped so the flow stays short
-  // (the frontend shows three per screen).
+  // Order: required personal fields, missing experience/skills, entry
+  // names/dates, the model's own questions, then empty-section prompts —
+  // capped so the flow stays short (the frontend shows three per screen).
   const questions = withMissingSectionQuestions(
     candidateData,
     withRequiredPersonalQuestions(
       candidateData,
-      withEntryDetailQuestions(
+      withCoreSectionQuestions(
+        candidateData,
+        withEntryDetailQuestions(
         candidateData,
         withoutAnsweredEntryQuestions(
           candidateData,
           withoutAnsweredPersonalQuestions(candidateData, Array.isArray(data.questions) ? data.questions : [])
+        )
         )
       )
     ),

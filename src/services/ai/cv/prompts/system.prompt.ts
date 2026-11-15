@@ -50,6 +50,8 @@ function buildOutputSchema(optionalSections: CVSectionKey[]): string {
 export interface SystemPromptInput {
   optionalSections: CVSectionKey[];
   enhancementLevel: number;
+  /** Without one, only the no-job-description part of the tailoring rules is sent. Defaults to true. */
+  hasJobDescription?: boolean;
 }
 
 /**
@@ -58,7 +60,7 @@ export interface SystemPromptInput {
  * place these rule modules are combined — providers must not build their own
  * prompt text (see openai-compatible.provider.ts, which only sends what this returns).
  */
-export function buildSystemPrompt({ optionalSections, enhancementLevel }: SystemPromptInput): string {
+export function buildSystemPrompt({ optionalSections, enhancementLevel, hasJobDescription = true }: SystemPromptInput): string {
   const topLevelKeys = [
     "personal",
     "experience",
@@ -72,7 +74,7 @@ export function buildSystemPrompt({ optionalSections, enhancementLevel }: System
     CV_RULES.core(),
     CV_RULES.content(),
     CV_RULES.hallucination(),
-    CV_RULES.tailoring(),
+    CV_RULES.tailoring(hasJobDescription),
     CV_RULES.enhancement(enhancementLevel),
     CV_RULES.formatting(topLevelKeys),
     CV_RULES.clarification(),

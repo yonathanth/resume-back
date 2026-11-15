@@ -79,7 +79,7 @@ export async function webhookRoutes(app: FastifyInstance) {
           const userId = await syncSubscriptionFromEvent(event);
           outcome = userId
             ? { status: "processed", error: null }
-            : { status: "unmatched", error: "No GoMoxie user matches this Polar customer (external id, customer id or email)" };
+            : { status: "unmatched", error: "No gomoxie user matches this Polar customer (external id, customer id or email)" };
         } catch (err) {
           request.log.error({ err }, "Polar subscription sync failed");
           outcome = { status: "failed", error: err instanceof Error ? err.message.slice(0, 500) : "Sync failed" };
@@ -97,7 +97,7 @@ export async function webhookRoutes(app: FastifyInstance) {
             ? { status: "processed", error: null }
             : {
                 status: "unmatched",
-                error: "Not a recognized pay-per-use order, or no GoMoxie user matches this Polar order",
+                error: "Not a recognized pay-per-use order, or no gomoxie user matches this Polar order",
               };
         } catch (err) {
           request.log.error({ err }, "Polar credit fulfillment failed");

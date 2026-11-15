@@ -35,7 +35,7 @@ import { audit, isoDate, paged, pageArgs, paginationSchema, parseOr400, reasonSc
 //   Polar — the source of truth for Polar subscriptions, orders, refunds and
 //           disputes. Read live from Polar's API; cancel/resume call Polar's
 //           API; refunds and disputes are handled in the Polar dashboard.
-//   GoMoxie — the User row mirrors the Polar subscription (synced by webhook
+//   gomoxie — the User row mirrors the Polar subscription (synced by webhook
 //           or by "Sync from Polar"); Chapa payments live in our Payment
 //           table and are only ever confirmed by re-verifying with Chapa.
 // Nothing here marks a payment successful or writes subscription status by hand.
@@ -295,7 +295,7 @@ export async function adminBillingRoutes(app: FastifyInstance) {
       const status = result.userId ? "processed" : "unmatched";
       await prisma.webhookEvent.update({
         where: { id: event.id },
-        data: { status, error: result.userId ? null : "Still no matching GoMoxie user", processedAt: new Date() },
+        data: { status, error: result.userId ? null : "Still no matching gomoxie user", processedAt: new Date() },
       });
       await audit(request, {
         action: "billing.webhook_retry",

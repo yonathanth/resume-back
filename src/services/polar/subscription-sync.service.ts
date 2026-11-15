@@ -46,7 +46,7 @@ export function isSubscriptionEvent(event: PolarWebhookEvent): event is PolarSub
 }
 
 /**
- * Resolves the GoMoxie user a Polar subscription belongs to. A Polar customer
+ * Resolves the gomoxie user a Polar subscription belongs to. A Polar customer
  * isn't necessarily linked to a User yet on the first event we see for them
  * (there's no checkout flow wired up to set `customer.external_id` to our
  * User.id yet), so this falls back to matching on the customer's email —

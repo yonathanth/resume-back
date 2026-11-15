@@ -18,8 +18,8 @@ export type FlowKey = (typeof FLOW_TYPES)[number];
 export const FEATURE_ACCESS_LEVELS = ["all", "pro", "beta", "off"] as const;
 export type FeatureAccessLevel = (typeof FEATURE_ACCESS_LEVELS)[number];
 
-/** The features that actually exist in GoMoxie and are gated on the backend. */
-/** The features that actually exist in GoMoxie and are gated on the backend. */
+/** The features that actually exist in gomoxie and are gated on the backend. */
+/** The features that actually exist in gomoxie and are gated on the backend. */
 export const FEATURE_KEYS = ["careerProfiles", "polishSummary", "cvImport", "aiPolish"] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 

@@ -108,7 +108,7 @@ describe("changing the account email", () => {
     expect(result.ok).toBe(true);
     expect(db.users[0].email).toBe("jo@new.com");
     expect(db.requests).toHaveLength(0);
-    expect(db.sent.at(-1)).toEqual({ to: "jo@old.com", subject: "Your GoMoxie email was changed" });
+    expect(db.sent.at(-1)).toEqual({ to: "jo@old.com", subject: "Your gomoxie email was changed" });
   });
 
   it("counts wrong codes down, then refuses even the right one", async () => {

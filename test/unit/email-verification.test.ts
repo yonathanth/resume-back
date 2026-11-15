@@ -134,8 +134,8 @@ describe("email verification codes", () => {
 describe("verification email", () => {
   it("puts the code in the subject, the preview and the body, with no link", () => {
     const email = verificationCodeEmail("482913", 15);
-    expect(email.subject).toBe("Your GoMoxie verification code: 482913");
-    expect(email.text).toContain("Your GoMoxie verification code is 482913.");
+    expect(email.subject).toBe("Your gomoxie verification code: 482913");
+    expect(email.text).toContain("Your gomoxie verification code is 482913.");
     expect(email.html).toContain("Your verification code is 482913");
     expect(email.html).toContain("user-select:all");
     expect(email.html).not.toContain("href=");

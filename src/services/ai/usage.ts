@@ -38,7 +38,7 @@ export function currentProviderName(): string {
 }
 
 export function currentModelName(): string {
-  return { groq: env.GROQ_MODEL, gemini: env.GEMINI_MODEL, mistral: env.MISTRAL_MODEL }[env.AI_PROVIDER];
+  return { groq: env.GROQ_MODEL, gemini: env.GEMINI_MODEL, vertex: env.VERTEX_MODEL, mistral: env.MISTRAL_MODEL }[env.AI_PROVIDER];
 }
 
 interface RecordInput {
@@ -54,6 +54,20 @@ interface RecordInput {
   latencyMs?: number;
 }
 
+/**
+ * Output tokens as billed: the reply plus any "thinking". Gemini (Vertex and
+ * AI Studio) reports thinking outside completion_tokens but inside
+ * total_tokens; OpenAI-style APIs (Groq…) already count it in
+ * completion_tokens. Taking total − prompt when it's larger covers both.
+ */
+export function billedOutputTokens(usage: RecordInput["usage"]): number | null {
+  const completion = usage?.completion_tokens ?? null;
+  const prompt = usage?.prompt_tokens;
+  const total = usage?.total_tokens;
+  if (prompt == null || total == null) return completion;
+  return Math.max(completion ?? 0, total - prompt);
+}
+
 export async function recordAiUsage(input: RecordInput): Promise<void> {
   const ctx = context.getStore();
   try {
@@ -67,9 +81,9 @@ export async function recordAiUsage(input: RecordInput): Promise<void> {
         status: input.status,
         errorCode: input.errorCode ?? null,
         // Provider error messages can echo request details — keep them short.
-        errorMessage: input.errorMessage ? input.errorMessage.slice(0, 300) : null,
+        errorMessage: input.errorMessage ? input.errorMessage.slice(0, 1000) : null,
         promptTokens: input.usage?.prompt_tokens ?? null,
-        completionTokens: input.usage?.completion_tokens ?? null,
+        completionTokens: billedOutputTokens(input.usage),
         totalTokens: input.usage?.total_tokens ?? null,
         latencyMs: input.latencyMs ?? null,
       },

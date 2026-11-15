@@ -66,7 +66,7 @@ model User {
   // background) or "never".
   profileAutoSync String @default("ask")
 
-  // GoMoxie Pro subscription state. Two independent ways to grant it:
+  // gomoxie Pro subscription state. Two independent ways to grant it:
   // Polar (real recurring subscription, synced from webhooks — see
   // src/services/polar/subscription-sync.service.ts) or Chapa (no
   // recurring billing — a one-time payment grants a fixed 1-month period,

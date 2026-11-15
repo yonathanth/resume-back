@@ -5,6 +5,8 @@ import { roleMismatchSchema, type AnalyzeResult, type RoleMismatch } from "../sc
 import { getAIOptionalSections, getCVTemplate } from "../config/cv-templates";
 import { normalizeEnhancementLevel } from "./ai/cv/generation/enhancement";
 import type { ProfileDefaults } from "./profileDefaults.service";
+import { AIUnparseableOutputError } from "./ai/openai-compatible.provider";
+import { env } from "../config/env";
 import {
   validateAnalyzeResult,
   type CvUserIdentity,
@@ -22,11 +24,41 @@ export class AIRateLimitedError extends Error {
 }
 
 // The model's output still didn't match the schema after one repair pass.
+// The message says why (validation issues, or why the JSON couldn't be read)
+// and the shape of what came back — never the CV text — so it can be logged
+// and recorded in AiUsageEvent for the admin to see.
 export class AIInvalidOutputError extends Error {
-  constructor(issues: string) {
+  constructor(issues: string, shape?: string) {
     super(`AI output failed validation after repair:
-${issues}`);
+${issues}${shape ? `\nOutput shape: ${shape}` : ""}`);
   }
+}
+
+/**
+ * What a reply contained, without any of its text: which top-level keys,
+ * how many entries each list had, which personal fields were filled.
+ * e.g. "candidateData{personal[full_name,email] experience:0 skills:3} questions:2"
+ */
+export function describeOutputShape(output: unknown): string {
+  if (typeof output !== "object" || output === null) return typeof output;
+  const describe = (value: unknown): string => {
+    if (Array.isArray(value)) return String(value.length);
+    if (typeof value === "object" && value !== null) return `{${Object.keys(value).join(",")}}`;
+    return typeof value;
+  };
+  return Object.entries(output as Record<string, unknown>)
+    .map(([key, value]) => {
+      if (key === "candidateData" && typeof value === "object" && value !== null && !Array.isArray(value)) {
+        const inner = Object.entries(value as Record<string, unknown>).map(([k, v]) =>
+          k === "personal" && typeof v === "object" && v !== null
+            ? `personal[${Object.keys(v).filter((f) => (v as Record<string, unknown>)[f]).join(",")}]`
+            : `${k}:${describe(v)}`
+        );
+        return `candidateData{${inner.join(" ")}}`;
+      }
+      return `${key}:${describe(value)}`;
+    })
+    .join(" ");
 }
 
 // 429 (rate limited) and 503 (model temporarily overloaded) are both
@@ -136,7 +168,49 @@ export async function generateCVContent(input: GenerateCVInput): Promise<Analyze
     profileDefaults: input.profileDefaults,
   };
 
-  const first = await generateWithRetry(provider, providerInput);
+  // The one repair pass: tells the model what was wrong with its last reply.
+  // A reply cut off at the token cap gets twice the room the second time.
+  const repair = async (repairNotes: string, cutOff: boolean): Promise<AnalyzeResult | RoleMismatch> => {
+    let repaired: AnalyzeResult | RoleMismatch;
+    try {
+      repaired = await provider.generateCV({
+        ...providerInput,
+        repairNotes,
+        ...(cutOff ? { maxOutputTokens: Math.min(env.AI_MAX_OUTPUT_TOKENS * 2, 16_384) } : {}),
+      });
+    } catch (err) {
+      const retryAfterMs = getRetryAfterMs(err, 1);
+      if (retryAfterMs !== null) throw new AIRateLimitedError(retryAfterMs);
+      if (err instanceof AIUnparseableOutputError) {
+        throw new AIInvalidOutputError(`- (root): ${err.message} — on the repair pass too`);
+      }
+      throw err;
+    }
+    const repairedMismatch = roleMismatchSchema.safeParse(repaired);
+    if (repairedMismatch.success) {
+      return repairedMismatch.data;
+    }
+    const repairedValidation = validateAnalyzeResult(repaired, context);
+    if (repairedValidation.success) {
+      return repairedValidation.data;
+    }
+    // Never hand unvalidated output to the caller — it would only fail later
+    // (e.g. when persisted via /cv/:id/generate) with a confusing error.
+    throw new AIInvalidOutputError(formatValidationIssues(repairedValidation.error.issues), describeOutputShape(repaired));
+  };
+
+  let first: AnalyzeResult | RoleMismatch;
+  try {
+    first = await generateWithRetry(provider, providerInput);
+  } catch (err) {
+    if (!(err instanceof AIUnparseableOutputError)) throw err;
+    return repair(
+      err.truncated
+        ? "- (root): your previous reply was cut off before the JSON object was finished. Respond with the complete JSON object only — keep bullets concise."
+        : "- (root): your previous reply was not valid JSON. Respond with a single JSON object only — no text, markdown or code fences around it.",
+      err.truncated
+    );
+  }
   const firstMismatch = roleMismatchSchema.safeParse(first);
   if (firstMismatch.success) {
     return firstMismatch.data;
@@ -147,26 +221,5 @@ export async function generateCVContent(input: GenerateCVInput): Promise<Analyze
     return firstValidation.data;
   }
 
-  let repaired: AnalyzeResult | RoleMismatch;
-  try {
-    repaired = await provider.generateCV({
-      ...providerInput,
-      repairNotes: formatValidationIssues(firstValidation.error.issues),
-    });
-  } catch (err) {
-    const retryAfterMs = getRetryAfterMs(err, 1);
-    if (retryAfterMs !== null) throw new AIRateLimitedError(retryAfterMs);
-    throw err;
-  }
-  const repairedMismatch = roleMismatchSchema.safeParse(repaired);
-  if (repairedMismatch.success) {
-    return repairedMismatch.data;
-  }
-  const repairedValidation = validateAnalyzeResult(repaired, context);
-  if (repairedValidation.success) {
-    return repairedValidation.data;
-  }
-  // Never hand unvalidated output to the caller — it would only fail later
-  // (e.g. when persisted via /cv/:id/generate) with a confusing error.
-  throw new AIInvalidOutputError(formatValidationIssues(repairedValidation.error.issues));
+  return repair(formatValidationIssues(firstValidation.error.issues), false);
 }

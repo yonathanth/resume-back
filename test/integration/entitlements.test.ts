@@ -344,8 +344,8 @@ describe("public pricing", () => {
     const res = await app.inject({ method: "GET", url: "/api/v1/pricing" });
     expect(res.statusCode).toBe(200);
     const data = res.json().data;
-    expect(data.plans.pro.monthly).toEqual({ price: 14.99, available: true });
-    expect(data.plans.plus.weekly).toEqual({ price: 3.99, available: false });
+    expect(data.plans.pro.monthly).toEqual({ price: 16, available: true });
+    expect(data.plans.plus.weekly).toEqual({ price: 4, available: false });
     expect(data.payPerCv.cv_new.price).toBe(2.99);
     expect(data.lifetime).toMatchObject({ price: 79, offer: { available: true, display: "seats" } });
     expect(JSON.stringify(data)).not.toContain("proFairUse");

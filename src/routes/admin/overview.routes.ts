@@ -7,7 +7,7 @@ import { polarRevenue } from "../../services/polar/admin.service";
 import { daysAgo, parseOr400 } from "./helpers";
 
 // The dashboard's numbers. Each block says where it comes from:
-//   database   — counted from GoMoxie's own tables right now
+//   database   — counted from gomoxie's own tables right now
 //   polar_api  — fetched live from Polar (can be unavailable)
 //   tracked    — only covers events recorded since tracking was added
 // Nothing is estimated or filled in when a source has no data.

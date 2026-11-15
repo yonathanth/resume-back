@@ -63,16 +63,16 @@ const bearerAuth: OpenAPIV3.SecurityRequirementObject[] = [{ bearerAuth: [] }];
 export const openApiSpecification: OpenAPIV3.Document = {
   openapi: "3.0.3",
   info: {
-    title: "GoMoxie API",
+    title: "gomoxie API",
     version: "1.0.0",
     description:
-      "API for GoMoxie: user authentication, career profiles, the step-by-step CV document wizard, CV import via file upload/OCR, and PDF rendering of finalized documents. Every endpoint responds with the envelope `{ data, error }` — exactly one of the two is non-null — except `GET /health` (bare status object) and `GET /cv/{id}/download` (raw PDF bytes).",
+      "API for gomoxie: user authentication, career profiles, the step-by-step CV document wizard, CV import via file upload/OCR, and PDF rendering of finalized documents. Every endpoint responds with the envelope `{ data, error }` — exactly one of the two is non-null — except `GET /health` (bare status object) and `GET /cv/{id}/download` (raw PDF bytes).",
   },
   servers: [{ url: "/api/v1", description: "Versioned API root (all routes below are relative to this)" }],
   tags: [
     { name: "Health", description: "Service liveness check" },
     { name: "Auth", description: "Registration, login, token refresh, and session identity" },
-    { name: "Profiles", description: "Career profiles — one per user per role, holding the facts CVs are generated from. Creating or changing them requires GoMoxie Pro (402 PRO_REQUIRED); reading and deleting are open on every plan." },
+    { name: "Profiles", description: "Career profiles — one per user per role, holding the facts CVs are generated from. Creating or changing them requires gomoxie Pro (402 PRO_REQUIRED); reading and deleting are open on every plan." },
     { name: "CV Documents", description: "The step-by-step CV wizard: draft creation, per-step edits, and finalization" },
     { name: "Imports", description: "Uploading an existing CV file, extracting its text, and applying it to a draft" },
     { name: "Rendering", description: "Rendering CV content with a template: live HTML preview and PDF download (same template for both)" },

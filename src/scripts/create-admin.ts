@@ -1,5 +1,5 @@
 /**
- * Creates (or manages) GoMoxie administrator accounts. Server-side only — there
+ * Creates (or manages) gomoxie administrator accounts. Server-side only — there
  * is deliberately no HTTP endpoint that creates admins or changes roles.
  *
  *   npm run admin:create                         create the first admin (prompts)
@@ -141,7 +141,7 @@ async function main() {
   if (existing.role !== "ADMIN") {
     if (!arg("promote")) {
       throw new Error(
-        `${email} already has a normal GoMoxie account. Rerun with --promote to make it an admin (its password stays the same), or use a different email.`
+        `${email} already has a normal gomoxie account. Rerun with --promote to make it an admin (its password stays the same), or use a different email.`
       );
     }
     await prisma.user.update({

@@ -93,6 +93,25 @@ export interface OpenAICompatibleConfig {
   reasoningEffort?: ReasoningEffort;
   /** Cap on a CV generation's reply (reasoning tokens count toward it on most providers). */
   maxOutputTokens: number;
+  /** Extra headers on every request; a null value removes a default one (e.g. Authorization). */
+  defaultHeaders?: Record<string, string | null>;
+}
+
+/**
+ * The model's reply couldn't be parsed as JSON. `truncated` (finish_reason
+ * "length") means it hit the output-token cap mid-object — retrying with the
+ * same cap fails the same way (see aiGeneration.service.ts). The message keeps
+ * "invalid JSON" so classifyAiError still files it as invalid_output.
+ */
+export class AIUnparseableOutputError extends Error {
+  readonly truncated: boolean;
+  constructor(
+    readonly finishReason: string | null,
+    readonly outputChars: number,
+  ) {
+    super(`AI provider returned invalid JSON (finish_reason=${finishReason ?? "unknown"}, ${outputChars} chars)`);
+    this.truncated = finishReason === "length";
+  }
 }
 
 function stripJsonFences(text: string): string {
@@ -151,7 +170,7 @@ export class OpenAICompatibleProvider implements AIProvider {
   private client: OpenAI;
 
   constructor(private config: OpenAICompatibleConfig) {
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL });
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, defaultHeaders: config.defaultHeaders });
   }
 
   private reasoningParams(): { reasoning_effort?: ReasoningEffort } {
@@ -171,20 +190,21 @@ export class OpenAICompatibleProvider implements AIProvider {
           ],
           response_format: { type: "json_object" },
           temperature: temperatureForEnhancementLevel(input.enhancementLevel),
-          max_tokens: this.config.maxOutputTokens,
+          max_tokens: input.maxOutputTokens ?? this.config.maxOutputTokens,
           ...this.reasoningParams(),
         },
         { timeout: REQUEST_TIMEOUT_MS }
       )
     );
 
-    const raw = completion.choices[0]?.message?.content ?? "";
+    const choice = completion.choices[0];
+    const raw = choice?.message?.content ?? "";
     const cleaned = stripJsonFences(raw);
 
     try {
       return JSON.parse(cleaned) as AnalyzeResult | RoleMismatch;
     } catch {
-      throw new Error("AI provider returned invalid JSON");
+      throw new AIUnparseableOutputError(choice?.finish_reason ?? null, raw.length);
     }
   }
 

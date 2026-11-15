@@ -1,6 +1,6 @@
 import { env } from "../../config/env";
 
-// The catalog of things Chapa sells. GoMoxie Pro itself is also sellable via
+// The catalog of things Chapa sells. gomoxie Pro itself is also sellable via
 // Polar (a separate, subscription-native integration — see services/polar/)
 // — this catalog exists only for products that go through Chapa's one-time
 // checkout+webhook flow. "PRO_SUBSCRIPTION" here means a single 1-month
@@ -33,7 +33,7 @@ export function getProductDefinition(productType: ProductType): ProductDefinitio
         // allows letters, numbers, hyphens, underscores, spaces, and dots —
         // no parentheses. Keep this short and plain; it's Chapa-checkout
         // display text only, not shown anywhere else in the app.
-        title: "GoMoxie Pro",
+        title: "gomoxie Pro",
       };
   }
 }

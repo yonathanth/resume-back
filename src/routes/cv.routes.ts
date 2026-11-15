@@ -1,3 +1,4 @@
+import { APIError } from "openai";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -26,7 +27,7 @@ import {
 } from "../schemas/cv-content.schema";
 import { sendError } from "../utils/http-error";
 import { renderCVDocumentToPdf } from "../services/render.service";
-import { generateCVContent, AIRateLimitedError, AIInvalidOutputError } from "../services/aiGeneration.service";
+import { generateCVContent, AIRateLimitedError, AIInvalidOutputError, describeOutputShape } from "../services/aiGeneration.service";
 import { getAIProvider } from "../services/ai";
 import {
   assertFeatureAccess,
@@ -123,12 +124,29 @@ async function unstampCharge(doc: ChargeableDoc) {
   });
 }
 
-// Output that still failed validation after the repair pass. The provider
-// calls themselves were logged as successes (their tokens were spent).
+// A CV generation that failed after the provider call(s) — so trackAiCall
+// logged them as successes (their tokens were spent) and nothing else records
+// why the user got "Moxie couldn't finish your CV". Provider errors (APIError,
+// timeouts) and rate limits are already recorded by trackAiCall.
 function recordInvalidOutput(err: unknown, userId: string, flowType?: string) {
   if (err instanceof AIInvalidOutputError) {
-    void recordAiUsage({ operation: "cv_generation", userId, flowType, status: "invalid_output", errorCode: "INVALID_OUTPUT" });
+    void recordAiUsage({ operation: "cv_generation", userId, flowType, status: "invalid_output", errorCode: "INVALID_OUTPUT", errorMessage: err.message });
+  } else if (!(err instanceof APIError) && !(err instanceof AIRateLimitedError)) {
+    // Anything else is our own code failing around the AI call.
+    const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    void recordAiUsage({ operation: "cv_generation", userId, flowType, status: "provider_error", errorCode: "APP_ERROR", errorMessage: message });
   }
+}
+
+/** What a failed generation was working with — sizes and flags only, never the text. */
+function generationLogContext(input: { sourceText?: string; jobDescription?: string; flowType?: string; enhancementLevel?: number }, templateId: string) {
+  return {
+    flowType: input.flowType,
+    templateId,
+    sourceChars: input.sourceText?.length ?? 0,
+    hasJobDescription: Boolean(input.jobDescription?.trim()),
+    enhancementLevel: input.enhancementLevel,
+  };
 }
 
 /** Ownership + Pro check for linking a CV to a career profile. */
@@ -413,7 +431,7 @@ export async function cvRoutes(app: FastifyInstance) {
           "The AI service is busy right now. Please wait a moment and try again."
         );
       }
-      request.log.error({ err }, "AI CV analysis failed");
+      request.log.error({ err, ...generationLogContext(parsed.data, templateId) }, "AI CV analysis failed");
       return sendError(reply, 502, "AI_GENERATION_FAILED", "AI analysis failed. Please try again.");
     }
 
@@ -428,8 +446,8 @@ export async function cvRoutes(app: FastifyInstance) {
     const saveCheck = validateGeneratedCv(result.candidateData, { templateId, userIdentity: identity, profileDefaults });
     if (!saveCheck.success) {
       await undoCharge();
-      recordInvalidOutput(new AIInvalidOutputError(saveCheck.error.issues.map((i) => i.message).join("; ")), request.userId, parsed.data.flowType);
-      request.log.error({ issues: saveCheck.error.issues }, "AI CV analysis produced content the save would reject");
+      recordInvalidOutput(new AIInvalidOutputError(saveCheck.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "), describeOutputShape(result)), request.userId, parsed.data.flowType);
+      request.log.error({ issues: saveCheck.error.issues, shape: describeOutputShape(result), ...generationLogContext(parsed.data, templateId) }, "AI CV analysis produced content the save would reject");
       return sendError(reply, 502, "AI_GENERATION_FAILED", "AI analysis failed. Please try again.");
     }
 
@@ -565,7 +583,7 @@ export async function cvRoutes(app: FastifyInstance) {
             "The AI service is busy right now. Please wait a moment and try again."
           );
         }
-        request.log.error({ err }, "AI CV generation failed");
+        request.log.error({ err, cvDocumentId: id, ...generationLogContext({ ...parsed.data, flowType }, document.templateId) }, "AI CV generation failed");
         return sendError(reply, 502, "AI_GENERATION_FAILED", "AI generation failed. Please try again.");
       }
     }
@@ -593,7 +611,8 @@ export async function cvRoutes(app: FastifyInstance) {
       if (parsed.data.analyzedContent && parsed.data.chargeToken) {
         await refundChargeToken(parsed.data.chargeToken, request.userId);
       }
-      request.log.error({ issues: validation.error.issues }, "AI generated content failed schema validation");
+      request.log.error({ issues: validation.error.issues, shape: describeOutputShape(result), cvDocumentId: id, ...generationLogContext(parsed.data, document.templateId) }, "AI generated content failed schema validation");
+      recordInvalidOutput(new AIInvalidOutputError(validation.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "), describeOutputShape(result)), request.userId, parsed.data.flowType);
       return sendError(
         reply,
         502,

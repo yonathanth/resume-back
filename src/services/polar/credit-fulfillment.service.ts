@@ -52,7 +52,7 @@ const metadataString = (order: PolarOrderSnapshot, key: string): string | null =
  *   plus_lifetime  → a LIFETIME_PLUS grant (Plus forever, limits reset monthly).
  *   cv_new/cv_edit → unlocks the CV named in the checkout's metadata.
  * Returns the user id, or null (no-op) for a subscription's recurring invoice,
- * an unknown product, or when no GoMoxie user (or CV) matches.
+ * an unknown product, or when no gomoxie user (or CV) matches.
  *
  * Idempotent per Polar order, not just per webhook delivery: Polar may
  * deliver more than one event for the same order, each with its own
@@ -79,7 +79,7 @@ export async function grantCreditFromOrder(order: PolarOrderSnapshot): Promise<s
         userId: user.id,
         kind: "LIFETIME_PLUS",
         amount: null,
-        reason: "Purchased GoMoxie Plus Lifetime via Polar",
+        reason: "Purchased gomoxie Plus Lifetime via Polar",
         note: order.id,
         startsAt: new Date(),
         expiresAt: null,

@@ -2,7 +2,7 @@
 // inserted into HTML is escaped — announcement text is admin-written, but it
 // still must never become markup.
 
-const BRAND = "GoMoxie";
+const BRAND = "gomoxie";
 
 export function escapeHtml(value: string): string {
   return value

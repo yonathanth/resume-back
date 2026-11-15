@@ -1,7 +1,7 @@
 import { env } from "../../config/env";
 import type { FlowKey } from "../settings.service";
 
-// What GoMoxie sells. Prices live in Polar (each plan + billing period is its
+// What gomoxie sells. Prices live in Polar (each plan + billing period is its
 // own Polar product); the copies here are only for display, and must match.
 //
 //   Free — one free AI CV (any kind), then pay per CV at download.
@@ -26,8 +26,8 @@ export function isPlanTier(value: string | null | undefined): value is PlanTier 
 }
 
 export const SUBSCRIPTION_PRICES: Record<PaidTier, Record<BillingPeriod, number>> = {
-  plus: { weekly: 3.99, monthly: 7.99, quarterly: 19.99 },
-  pro: { weekly: 6.99, monthly: 14.99, quarterly: 34.99 },
+  plus: { weekly: 4, monthly: 8, quarterly: 12 },
+  pro: { weekly: 7, monthly: 16, quarterly: 36 },
 };
 
 const PERIOD_LABEL: Record<BillingPeriod, string> = { weekly: "Weekly", monthly: "Monthly", quarterly: "3 Months" };
@@ -63,7 +63,7 @@ export function getSubscriptionPlan(tier: PaidTier, period: BillingPeriod): Subs
     tier,
     period,
     productId: subscriptionProductId(tier, period),
-    label: `GoMoxie ${TIER_LABEL[tier]} ${PERIOD_LABEL[period]}`,
+    label: `gomoxie ${TIER_LABEL[tier]} ${PERIOD_LABEL[period]}`,
     price: SUBSCRIPTION_PRICES[tier][period],
   };
 }
@@ -125,7 +125,7 @@ export interface OneTimeProductDefinition {
 }
 
 const ONE_TIME_LABEL: Record<OneTimeProduct, string> = {
-  plus_lifetime: "GoMoxie Plus Lifetime",
+  plus_lifetime: "gomoxie Plus Lifetime",
   cv_new: "Download one new CV",
   cv_edit: "Download one tailored or improved CV",
 };

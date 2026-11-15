@@ -563,7 +563,7 @@ async function withRenderSlot<T>(fn: () => Promise<T>): Promise<T> {
 const PREVIEW_WATERMARK_HTML = `<style>
   .gm-preview-watermark { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 2147483647; }
   .gm-preview-watermark span { transform: rotate(-32deg); font: 700 64px/1 Arial, sans-serif; letter-spacing: 6px; color: rgba(15, 17, 21, 0.13); white-space: nowrap; }
-</style><div class="gm-preview-watermark"><span>PREVIEW · GOMOXIE</span></div>`;
+</style><div class="gm-preview-watermark"><span>Preview · gomoxie</span></div>`;
 
 export async function renderCVDocumentToPdf(
   content: unknown,

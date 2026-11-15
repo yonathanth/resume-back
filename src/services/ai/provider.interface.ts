@@ -37,6 +37,8 @@ export interface AIGenerateInput {
   focusInstructions?: string;
   /** Set on a self-correction retry: the exact validation errors from the previous attempt. */
   repairNotes?: string;
+  /** Overrides the provider's output-token cap for this call (a retry after a cut-off reply). */
+  maxOutputTokens?: number;
 }
 
 export interface PolishSummaryInput {

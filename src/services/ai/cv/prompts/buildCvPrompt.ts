@@ -15,7 +15,11 @@ export interface CvPromptMessages {
  */
 export function buildCvGenerationPrompt(input: AIGenerateInput): CvPromptMessages {
   return {
-    system: buildSystemPrompt({ optionalSections: input.optionalSections, enhancementLevel: input.enhancementLevel }),
+    system: buildSystemPrompt({
+      optionalSections: input.optionalSections,
+      enhancementLevel: input.enhancementLevel,
+      hasJobDescription: Boolean(input.jobDescription?.trim()),
+    }),
     user: buildUserMessage(input),
   };
 }

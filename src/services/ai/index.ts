@@ -24,6 +24,19 @@ export function getAIProvider(): AIProvider {
         reasoningEffort: env.GEMINI_REASONING_EFFORT,
         maxOutputTokens: env.AI_MAX_OUTPUT_TOKENS,
       });
+    case "vertex":
+      // Gemini on Vertex AI: billed to the project's Cloud billing account (so
+      // Cloud credits apply), unlike the Gemini API's AI Studio billing. Vertex
+      // takes an API key in x-goog-api-key, not as a Bearer token, so the
+      // SDK's Authorization header is dropped.
+      return new OpenAICompatibleProvider({
+        apiKey: env.VERTEX_API_KEY!,
+        baseURL: `https://aiplatform.googleapis.com/v1/projects/${env.VERTEX_PROJECT}/locations/${env.VERTEX_LOCATION}/endpoints/openapi`,
+        model: env.VERTEX_MODEL,
+        reasoningEffort: env.GEMINI_REASONING_EFFORT,
+        maxOutputTokens: env.AI_MAX_OUTPUT_TOKENS,
+        defaultHeaders: { "x-goog-api-key": env.VERTEX_API_KEY!, Authorization: null },
+      });
     case "mistral":
       return new OpenAICompatibleProvider({
         apiKey: env.MISTRAL_API_KEY!,

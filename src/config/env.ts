@@ -25,7 +25,7 @@ const envSchema = z.object({
   // and the base of the links in confirmation emails.
   FRONTEND_URL: z.string().default("http://localhost:3002"),
   // Confirmation emails (services/emailVerification.service.ts). EMAIL_FROM
-  // must be on a domain verified in Resend, e.g. "GoMoxie <no-reply@example.com>".
+  // must be on a domain verified in Resend, e.g. "gomoxie <no-reply@example.com>".
   // When either is missing outside production, links are logged instead.
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
@@ -39,9 +39,9 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   // A mailto: or https: contact for push services, e.g. "mailto:ops@example.com".
   VAPID_SUBJECT: z.string().optional(),
-  // Which AI service writes CVs: "groq", "gemini" or "mistral" (see services/ai/index.ts).
+  // Which AI service writes CVs: "groq", "gemini", "vertex" or "mistral" (see services/ai/index.ts).
   // Only the selected provider's key is required.
-  AI_PROVIDER: z.enum(["groq", "gemini", "mistral"]).default("groq"),
+  AI_PROVIDER: z.enum(["groq", "gemini", "vertex", "mistral"]).default("groq"),
   // Cap on a CV generation's reply, reasoning tokens included.
   AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(4096),
   GROQ_API_KEY: z.string().optional(),
@@ -53,6 +53,13 @@ const envSchema = z.object({
   GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
   // Gemini "thinking" (billed as output tokens); "none" turns it off on Flash models.
   GEMINI_REASONING_EFFORT: z.enum(["none", "low", "medium", "high"]).default("low"),
+  // Gemini on Vertex AI (AI_PROVIDER=vertex) — billed to the Cloud project, so
+  // Cloud credits apply. The key must be allowed to call the Vertex AI API.
+  // Uses GEMINI_REASONING_EFFORT for "thinking".
+  VERTEX_API_KEY: z.string().optional(),
+  VERTEX_PROJECT: z.string().optional(),
+  VERTEX_LOCATION: z.string().default("global"),
+  VERTEX_MODEL: z.string().default("google/gemini-3.5-flash-lite"),
   MISTRAL_API_KEY: z.string().optional(),
   MISTRAL_MODEL: z.string().default("mistral-medium-latest"),
   CHAPA_SECRET_KEY: z.string().min(1, "CHAPA_SECRET_KEY is required"),
@@ -115,9 +122,12 @@ const envSchema = z.object({
   MAX_CONCURRENT_RENDERS: z.coerce.number().int().min(1).max(10).default(3),
 }).superRefine((env, ctx) => {
   // Only the AI provider actually in use needs a key.
-  const keyName = ({ groq: "GROQ_API_KEY", gemini: "GEMINI_API_KEY", mistral: "MISTRAL_API_KEY" } as const)[env.AI_PROVIDER];
+  const keyName = ({ groq: "GROQ_API_KEY", gemini: "GEMINI_API_KEY", vertex: "VERTEX_API_KEY", mistral: "MISTRAL_API_KEY" } as const)[env.AI_PROVIDER];
   if (!env[keyName]) {
     ctx.addIssue({ code: "custom", path: [keyName], message: `${keyName} is required when AI_PROVIDER=${env.AI_PROVIDER}` });
+  }
+  if (env.AI_PROVIDER === "vertex" && !env.VERTEX_PROJECT) {
+    ctx.addIssue({ code: "custom", path: ["VERTEX_PROJECT"], message: "VERTEX_PROJECT is required when AI_PROVIDER=vertex" });
   }
 });
 

@@ -1,4 +1,4 @@
-# GoMoxie admin dashboard — operator guide
+# gomoxie admin dashboard — operator guide
 
 The admin dashboard lives in the frontend at `/admin` and talks to `/api/v1/admin/*` on this backend. It uses the same
 accounts and sessions as the app: an admin is a normal `User` row with `role = "ADMIN"`. Every admin endpoint checks
@@ -47,7 +47,7 @@ account**. If you lose it, use `--reset-password` on the server.
 | Variable | Needed for | Example |
 | --- | --- | --- |
 | `EMAIL_PROVIDER` | optional: `resend` or `console` (log only) | `resend` |
-| `RESEND_API_KEY`, `EMAIL_FROM` | real email delivery (existing) | `re_xxx`, `"GoMoxie <no-reply@yourdomain.com>"` |
+| `RESEND_API_KEY`, `EMAIL_FROM` | real email delivery (existing) | `re_xxx`, `"gomoxie <no-reply@yourdomain.com>"` |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | browser push (optional) | from `npx web-push generate-vapid-keys`, `mailto:ops@yourdomain.com` |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | only for a one-off `admin:create` run | — |
 
@@ -60,7 +60,7 @@ No frontend variables are new. The browser never receives provider keys; the VAP
   `orders:read`, `refunds:read`, `disputes:read`, `organizations:read` and `subscriptions:read`. The existing checkout
   and cancel features also need `checkouts:write` and `subscriptions:write`. Without these scopes the dashboard shows
   "Polar API unavailable: insufficient_scope" instead of numbers. Refunds and disputes are handled in the Polar
-  dashboard; GoMoxie links to it.
+  dashboard; gomoxie links to it.
 - **Polar webhook.** Same endpoint as before (`/api/v1/webhooks/polar`). Outcomes (processed / failed / unmatched /
   ignored) are now recorded. "Retry sync" re-fetches the subscription from Polar's API; it never replays the old
   payload.

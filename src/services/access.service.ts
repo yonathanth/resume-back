@@ -328,10 +328,10 @@ export async function resolveAccess(userId: string): Promise<AccessSnapshot | nu
 }
 
 const PRO_FEATURE_MESSAGES: Record<FeatureKey, string> = {
-  careerProfiles: "Career Profiles come with GoMoxie Plus and Pro. Upgrade to use them",
-  polishSummary: "AI summary polish comes with GoMoxie Plus and Pro. Upgrade to use it",
-  cvImport: "CV upload comes with GoMoxie Plus and Pro. Upgrade to use it",
-  aiPolish: "AI polish comes with GoMoxie Plus and Pro. Upgrade to use it",
+  careerProfiles: "Career Profiles come with gomoxie Plus and Pro. Upgrade to use them",
+  polishSummary: "AI summary polish comes with gomoxie Plus and Pro. Upgrade to use it",
+  cvImport: "CV upload comes with gomoxie Plus and Pro. Upgrade to use it",
+  aiPolish: "AI polish comes with gomoxie Plus and Pro. Upgrade to use it",
 };
 
 /** A paid-only feature for a user on Free (→ 402 PRO_REQUIRED, which the frontend's paywall handles). */

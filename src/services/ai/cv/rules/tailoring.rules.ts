@@ -7,10 +7,22 @@
  * generic rewrite that ignores the job description or a keyword-stuffing
  * pass that copies its terms into the candidate's data.
  */
-export function getTailoringRules(): string {
+const NO_JOB_DESCRIPTION_RULE = `generate a strong professional CV aimed at the role the candidate says they want next (e.g. "I want a senior accountant role"), or, when they don't say, at the direction of their most recent role — lead the headline, summary, skills order and bullet order with what matters most for that role`;
+
+/**
+ * Without a job description the model is told to skip everything after the
+ * first paragraph, so that rest (~2.7k tokens, about a third of the prompt)
+ * isn't sent at all — same instructions, less input billed.
+ */
+export function getTailoringRules(hasJobDescription = true): string {
+  if (!hasJobDescription) {
+    return `TAILORING RULES
+
+No job description is provided: ${NO_JOB_DESCRIPTION_RULE}. jobAnalysis must be null, not an object.`;
+  }
   return `TAILORING RULES
 
-If no job description is provided: generate a strong professional CV aimed at the role the candidate says they want next (e.g. "I want a senior accountant role"), or, when they don't say, at the direction of their most recent role — lead the headline, summary, skills order and bullet order with what matters most for that role — and skip the rest of this section.
+If no job description is provided: ${NO_JOB_DESCRIPTION_RULE} — and skip the rest of this section.
 
 If a job description is provided, first run the ROLE COMPATIBILITY CHECK below. Only if it passes do you proceed to the two tailoring steps: first analyze the job, then align the candidate's ACTUAL information with it.
 

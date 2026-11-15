@@ -264,14 +264,18 @@ export const PartialCVContent = z.object({
 
 export type PartialCVContent = z.infer<typeof PartialCVContent>;
 
-// personal/experience(>=1)/skills(>=1) required, everything else optional — for AI-generated content,
-// which may not populate every section but must cover the fields that make a document usable.
+// For AI-generated content (and the shape check at finalize): checks types and
+// formats, requires nothing. Experience and skills may come back empty — the AI
+// must not invent them when the material has none (a student, a short story, an
+// upload whose text didn't come through), so the user is asked for them instead
+// (validateGeneratedCv.ts's core-section questions) and the editor fills them.
+// Exporting still needs ≥1 of each: POST /cv/:id/finalize checks that itself.
 const generatedCVContentSchema = z.object({
   personal: partialPersonalSchema,
   summary: z.string().optional(),
-  experience: z.array(partialExperienceEntrySchema).min(1, "At least one experience entry is required"),
+  experience: z.array(partialExperienceEntrySchema).default([]),
   education: z.array(partialEducationEntrySchema).optional(),
-  skills: z.array(z.string()).min(1, "At least one skill is required"),
+  skills: z.array(z.string()).default([]),
   skillGroups: z.array(partialSkillGroupSchema).optional(),
   certifications: z.array(partialCertificationSchema).optional(),
   projects: z.array(partialProjectSchema).optional(),
