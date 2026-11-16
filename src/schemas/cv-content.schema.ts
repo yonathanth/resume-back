@@ -3,6 +3,9 @@ import { z } from "zod";
 export const linkSchema = z.object({
   label: z.string(),
   url: z.string(),
+  // How the CV shows it: the address itself, or the label as clickable text.
+  // Absent on older CVs — each template then keeps its own default.
+  display: z.enum(["url", "label"]).optional(),
 });
 
 // A bullet is `{ label?, text }` — the optional label is the short bold lead-in

@@ -24,6 +24,7 @@ import { notificationRoutes } from "./routes/notification.routes";
 import { activationRoutes } from "./routes/activation.routes";
 import { adminRoutes } from "./routes/admin";
 import { closeRenderBrowser } from "./services/render.service";
+import { isDbUnavailable, sendDbUnavailable } from "./utils/db-errors";
 
 // Builds the app without listening, so tests can drive it with app.inject().
 export async function buildServer(options: { logger?: boolean } = {}) {
@@ -50,6 +51,17 @@ export async function buildServer(options: { logger?: boolean } = {}) {
     specification: { document: openApiSpecification },
   });
   await app.register(swaggerUi, { routePrefix: "/docs" });
+
+  // A database hiccup is a 503 the client can act on, not a bare 500. Only
+  // reads are marked safe to repeat here: a write may have gone halfway.
+  // Everything else falls through to Fastify's default handler.
+  app.setErrorHandler((error, request, reply) => {
+    if (isDbUnavailable(error)) {
+      request.log.warn({ err: error }, "database unavailable");
+      return sendDbUnavailable(reply, { retryable: request.method === "GET" || request.method === "HEAD" });
+    }
+    throw error;
+  });
 
   await app.register(healthRoutes);
   await app.register(authRoutes);

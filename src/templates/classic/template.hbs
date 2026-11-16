@@ -243,7 +243,7 @@
       <div class="row">
         <span>
           {{#if personal.title}}<em>{{personal.title}}</em>{{#if personal.links.length}} | {{/if}}{{/if}}
-          {{#each personal.links}}{{#if @index}} | {{/if}}<a href="{{href url}}">{{#if label}}{{label}}: {{/if}}{{displayUrl url}}</a>{{/each}}
+          {{#each personal.links}}{{#if @index}} | {{/if}}<a href="{{href url}}"{{#if (eq display "label")}}{{#if label}} class="link-embedded"{{/if}}{{/if}}>{{#if (eq display "label")}}{{#if label}}{{label}}{{else}}{{displayUrl url}}{{/if}}{{else}}{{#if (eq display "url")}}{{displayUrl url}}{{else}}{{#if label}}{{label}}: {{/if}}{{displayUrl url}}{{/if}}{{/if}}</a>{{/each}}
         </span>
         <span>{{#if personal.phone}}Mobile: {{personal.phone}}{{/if}}</span>
       </div>

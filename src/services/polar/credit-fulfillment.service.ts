@@ -1,5 +1,6 @@
 import { prisma } from "../../db/client";
-import { findOneTimeProductByProductId, isCvUnlockProduct, type OneTimeProduct } from "./plans";
+import { findOneTimeProductByProductId, isCvUnlockProduct, isPlanTier, type OneTimeProduct } from "./plans";
+import { releasePayLaterStart } from "../entitlement.service";
 import type { PolarWebhookEvent } from "./subscription-sync.service";
 
 export type PolarOrderPaidEvent = Extract<PolarWebhookEvent, { type: "order.paid" }>;
@@ -95,6 +96,11 @@ export async function grantCreditFromOrder(order: PolarOrderSnapshot): Promise<s
       where: { id: cvDocumentId, userId: user.id, unlockedAt: null },
       data: { unlockedAt: new Date() },
     });
+    if (count > 0) {
+      // Paid for: its pay-later start stops holding a slot of the unpaid cap.
+      const doc = await prisma.cVDocument.findFirst({ where: { id: cvDocumentId }, select: { lockedTier: true } });
+      await releasePayLaterStart(user.id, isPlanTier(doc?.lockedTier) ? doc.lockedTier : null);
+    }
     if (count === 0) {
       // Already unlocked (a repeat delivery) still counts as handled.
       const exists = await prisma.cVDocument.findFirst({ where: { id: cvDocumentId, userId: user.id }, select: { id: true } });

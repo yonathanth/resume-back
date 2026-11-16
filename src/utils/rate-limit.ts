@@ -45,8 +45,13 @@ export async function takeRateLimit(keys: string[], windows: RateWindow[]): Prom
     const createdAt = new Date(now);
     await tx.rateLimitHit.createMany({ data: uniqueKeys.map((key) => ({ key, createdAt })) });
     return { ok: true };
-  });
+  }, TRANSACTION_OPTIONS);
 }
+
+// Prisma's defaults (2s to start, 5s to finish) are too tight for a
+// serverless database that's waking up: a few slow round-trips would expire
+// the transaction and refuse a request that was never over any cap.
+const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 15_000 };
 
 /** Deletes a limiter's rows older than its longest window. */
 async function pruneRateLimitHits(prefix: string, longestMs: number) {

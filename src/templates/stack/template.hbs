@@ -153,7 +153,7 @@
       <h1>{{personal.full_name}}</h1>
       <span class="h-right">{{#if personal.location}}Location: {{personal.location}}{{/if}}</span>
       <span class="h-links">
-        {{#each personal.links}}{{#if @index}} | {{/if}}<a class="u" href="{{href url}}">{{#if label}}{{label}}{{else}}{{displayUrl url}}{{/if}}</a>{{/each}}
+        {{#each personal.links}}{{#if @index}} | {{/if}}<a class="u{{#if (eq display "label")}}{{#if label}} link-embedded{{/if}}{{/if}}" href="{{href url}}">{{#if (eq display "url")}}{{displayUrl url}}{{else}}{{#if label}}{{label}}{{else}}{{displayUrl url}}{{/if}}{{/if}}</a>{{/each}}
       </span>
       <span class="h-right">
         {{#if personal.email}}Email: <a class="u" href="mailto:{{personal.email}}">{{personal.email}}</a>{{/if}}{{#if personal.phone}}{{#if personal.email}} | {{/if}}Mobile: {{personal.phone}}{{/if}}

@@ -95,7 +95,7 @@
         {{!-- The address leads, as in the original's "Address · email · website". --}}
         <p class="contact-line">
           {{#each contacts}}{{#if (eq kind "location")}}<span class="c-item">{{text}}</span>{{/if}}{{/each}}
-          {{#each contacts}}{{#unless (eq kind "location")}}<span class="c-item">{{#if href}}<a class="link" href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/unless}}{{/each}}
+          {{#each contacts}}{{#unless (eq kind "location")}}<span class="c-item">{{#if href}}<a class="link{{#if embedded}} link-embedded{{/if}}" href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/unless}}{{/each}}
         </p>
       {{/if}}
     </header>

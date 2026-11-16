@@ -13,7 +13,7 @@
       {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
       {{#if contacts.length}}
         <p class="contact-line">
-          {{#each contacts}}<span class="contact-item">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/each}}
+          {{#each contacts}}<span class="contact-item">{{#if href}}<a href="{{href}}"{{#if embedded}} class="link-embedded"{{/if}}>{{text}}</a>{{else}}{{text}}{{/if}}</span>{{/each}}
         </p>
       {{/if}}
     </header>

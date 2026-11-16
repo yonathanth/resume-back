@@ -14,8 +14,9 @@ export const PATH_CLOSE = "";
 
 type Content = Record<string, unknown>;
 
-// Values that end up in attributes or are reformatted as addresses — never tagged.
-const UNTAGGED_KEYS = new Set(["url", "photo"]);
+// Values that end up in attributes, are reformatted as addresses, or are
+// settings the templates compare (a link's "display") — never tagged.
+const UNTAGGED_KEYS = new Set(["url", "photo", "display"]);
 
 const tag = (path: string, value: string) => `${PATH_OPEN}${path}${PATH_SEP}${value}${PATH_CLOSE}`;
 

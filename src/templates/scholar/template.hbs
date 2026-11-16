@@ -17,7 +17,7 @@
         <h1>{{personal.full_name}}</h1>
         {{#if personal.title}}<p class="headline">{{personal.title}}</p>{{/if}}
         <ul class="id-contacts">
-          {{#each contacts}}<li>{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</li>{{/each}}
+          {{#each contacts}}<li>{{#if href}}<a href="{{href}}"{{#if embedded}} class="link-embedded"{{/if}}>{{text}}</a>{{else}}{{text}}{{/if}}</li>{{/each}}
         </ul>
       </div>
     </header>

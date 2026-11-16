@@ -15,7 +15,7 @@ import {
 } from "../services/polar/cancel.service";
 import { initializePaymentForResource } from "../services/payment.service";
 import { PaymentProviderError } from "../services/payment";
-import { countUnpaidCvs, hasActiveProAccess, toEntitlementSnapshot } from "../services/entitlement.service";
+import { countPayLaterInUse, countUnpaidCvs, hasActiveProAccess, toEntitlementSnapshot } from "../services/entitlement.service";
 import { getSettings } from "../services/settings.service";
 import { resolveAccess } from "../services/access.service";
 
@@ -27,7 +27,13 @@ async function toStatusResponse(user: User) {
   const access = await resolveAccess(user.id);
   if (!access) throw new Error("User disappeared while reading subscription status");
   const entitlement = toEntitlementSnapshot(access);
-  const [settings, unpaidCvs] = await Promise.all([getSettings(), countUnpaidCvs(user.id, access.tier)]);
+  // count: the locked CVs they have (shown as "waiting to be paid for"); inUse: slots of the cap taken,
+  // which also counts pay-later CVs they deleted in the last 30 days.
+  const [settings, unpaidCvs, payLaterInUse] = await Promise.all([
+    getSettings(),
+    countUnpaidCvs(user.id, access.tier),
+    countPayLaterInUse(user.id, access.tier),
+  ]);
   // Pro's fair-use cap is enforced but never shown: Pro reads as unlimited.
   const shown = (limit: (typeof access.limits)["create"]) =>
     limit.hidden ? { limit: null, used: limit.used, remaining: null } : { limit: limit.limit, used: limit.used, remaining: limit.remaining };
@@ -66,7 +72,7 @@ async function toStatusResponse(user: User) {
     },
     free: access.free,
     // Pay-per-CV: AI CVs still waiting to be paid for, and how many may wait at once.
-    unpaidCvs: { count: unpaidCvs, cap: settings.plans.free.unpaidCvCap },
+    unpaidCvs: { count: unpaidCvs, inUse: payLaterInUse, cap: settings.plans.free.unpaidCvCap },
   };
 }
 

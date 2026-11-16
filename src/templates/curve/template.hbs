@@ -117,7 +117,7 @@
             {{#each contacts}}
               <li class="field f-{{kind}}">
                 <span class="f-icon">{{icon icon}}</span>
-                <span class="f-text">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</span>
+                <span class="f-text">{{#if href}}<a href="{{href}}"{{#if embedded}} class="link-embedded"{{/if}}>{{text}}</a>{{else}}{{text}}{{/if}}</span>
               </li>
             {{/each}}
           </ul>

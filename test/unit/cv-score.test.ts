@@ -72,7 +72,7 @@ describe("scoreCv", () => {
     const phone = score.checks.find((c) => c.id === "contact.phone")!;
     expect(phone).toMatchObject({ status: "fail", points: 0, fix: "manual", kind: "missing", section: "personal", field: "phone" });
     expect(failing(score)).toEqual(["contact.phone", "contact.link"]);
-    expect(score.total).toBe(97);
+    expect(score.total).toBe(96);
   });
 
   it("penalizes first person and clichés in the summary and offers a summary polish", () => {
@@ -203,10 +203,49 @@ describe("scoreCv with a job", () => {
     const check = scoreCv(cv, { title: "Platform Engineer", requiredSkills: [], preferredSkills: [] }).checks.find((c) => c.id === "job.title")!;
     expect(check).toMatchObject({ status: "fail", fix: "ai", polish: { kind: "headline" } });
   });
+
+  // One tidy role passes every ratio check ("3 bullets per role", "40% have numbers"):
+  // it used to score 86. The depth check and the content cap keep a CV like this modest.
+  it("keeps a thin CV modest however tidy its few bullets are", () => {
+    const thin: ScoreInput = {
+      personal: { full_name: "Alex Doe", title: "Senior Cloud Architect", email: "alex@example.com" },
+      summary:
+        "Senior Cloud Architect with 7 years of experience leading AWS and Kubernetes platforms. Proven record of scaling " +
+        "infrastructure to handle 12M daily requests and optimizing cloud spend.",
+      experience: [
+        {
+          company: "Stripe & Vercel",
+          role: "Senior Cloud Architect",
+          start_date: "2017",
+          bullets: [
+            { label: "Cost Optimization", text: "Cut cloud spend by $320K through infrastructure optimization and resource right-sizing across AWS platforms." },
+            { label: "Platform Scale", text: "Managed 12M daily requests using Go and Terraform to ensure high availability and performance." },
+            { label: "Platform Leadership", text: "Led AWS and Kubernetes platform initiatives over 7 years across high-growth engineering environments." },
+          ],
+        },
+      ],
+      education: [{ institution: "UC Berkeley", degree: "Bachelor of Science in Computer Science" }],
+      skillGroups: [
+        { category: "Cloud & Infra", items: ["AWS", "Kubernetes", "Terraform", "Cloud Architecture"] },
+        { category: "Languages", items: ["Go"] },
+      ],
+    };
+    const score = scoreCv(thin);
+    expect(score.total).toBeGreaterThanOrEqual(55);
+    expect(score.total).toBeLessThanOrEqual(65);
+    expect(score.depthCap).toMatchObject({ max: score.quality, target: 250 });
+    expect(failing(score)).toEqual(expect.arrayContaining(["experience.depth", "writing.length", "experience.complete"]));
+    expect(score.checks.find((c) => c.id === "writing.length")!.kind).toBe("improve");
+    expect(score.checks.find((c) => c.id === "experience.depth")!.kind).toBe("improve");
+  });
+
+  it("lifts the content cap once the CV has enough in it", () => {
+    expect(scoreCv(perfectCv()).depthCap).toBeUndefined();
+  });
 });
 
 describe("engine copies", () => {
-  const frontendCopy = resolve(__dirname, "../../../resume-front/src/lib/cv-score/engine.ts");
+  const frontendCopy = resolve(__dirname, "../../../resume/src/lib/cv-score/engine.ts");
 
   // The editor scores live with the same file; if they drift, the number in
   // the editor and the stored one disagree. Fix: copy one over the other.

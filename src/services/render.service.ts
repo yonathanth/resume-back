@@ -109,6 +109,19 @@ for (const file of readdirSync(SHARED_DIR)) {
 }
 const SHARED_BASE_CSS = readFileSync(path.join(SHARED_DIR, "base.css"), "utf-8");
 
+// A link shown as its label ("GitHub" instead of github.com/you) has to look
+// clickable, since the address isn't on the page: a link blue mixed with the
+// text around it (so it stays legible on dark headers too), underlined.
+// Added to every template, after its own styles.
+const EMBEDDED_LINK_CSS = `
+a.link-embedded {
+  color: color-mix(in srgb, #2563eb 72%, currentColor) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+`;
+
 // Fail at boot, not in a user's PDF, if a registered font file is missing.
 for (const font of Object.values(CV_FONTS)) {
   for (const face of font.faces) {
@@ -411,6 +424,8 @@ interface ContactItem {
   label: string;
   text: string;
   href?: string;
+  /** A link shown as its label: styled as a link, since the address itself isn't on the page. */
+  embedded?: boolean;
 }
 
 function contactItems(personal: Content): ContactItem[] {
@@ -424,7 +439,11 @@ function contactItems(personal: Content): ContactItem[] {
   for (const link of asArray(personal.links)) {
     const url = str(link.url);
     if (!url) continue;
-    items.push({ kind: "link", icon: iconForLink(str(link.label), url), label: str(link.label), text: displayUrl(url), href: safeHref(url) });
+    const label = str(link.label);
+    // "Show as: name" puts the label on the CV as the clickable text (when there is one).
+    const embedded = link.display === "label" && Boolean(label);
+    const text = embedded ? label : displayUrl(url);
+    items.push({ kind: "link", icon: iconForLink(label, url), label, text, href: safeHref(url), embedded });
   }
   return items;
 }
@@ -468,7 +487,7 @@ export async function renderCvHtml(rawContent: unknown, templateId: string, opti
     sections,
     mainSections: sections.filter((s) => !sidebarKeys.has(s.key)),
     sidebarSections: sections.filter((s) => sidebarKeys.has(s.key)),
-    styles: `${await fontCss(template, options)}\n${css}${showMissing ? MISSING_DETAILS_CSS : ""}`,
+    styles: `${await fontCss(template, options)}\n${css}\n${EMBEDDED_LINK_CSS}${showMissing ? MISSING_DETAILS_CSS : ""}`,
     mode: options.mode,
   });
   return isPreview ? markMissingDetails(html) : html;

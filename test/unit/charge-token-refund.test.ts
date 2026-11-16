@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The refund only touches the user's counters; nothing else reaches the database.
 const updateMany = vi.fn().mockResolvedValue({ count: 1 });
-vi.mock("../../src/db/client", () => ({ prisma: { user: { updateMany } } }));
+// A pay-later refund gives its slot of the unpaid cap back (a RateLimitHit row).
+const findFirst = vi.fn().mockResolvedValue({ id: 7n });
+const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+vi.mock("../../src/db/client", () => ({ prisma: { user: { updateMany }, rateLimitHit: { findFirst, deleteMany } } }));
 
 const { createChargeToken, keepChargeToken, refundChargeToken } = await import("../../src/services/entitlement.service");
 
@@ -10,7 +13,11 @@ const freeCharge = () =>
   createChargeToken("user-1", { kind: "free", flowType: "create", charged: true, periodKey: null, lock: null });
 
 describe("a charge from /cv/analyze that the save can't use", () => {
-  beforeEach(() => updateMany.mockClear());
+  beforeEach(() => {
+    updateMany.mockClear();
+    findFirst.mockClear();
+    deleteMany.mockClear();
+  });
 
   it("is given back once", async () => {
     const token = freeCharge();
@@ -43,5 +50,8 @@ describe("a charge from /cv/analyze that the save can't use", () => {
     });
     expect(await refundChargeToken(token, "user-1")).toBe(false);
     expect(updateMany).not.toHaveBeenCalled();
+    // …but its pay-later start no longer holds a slot of the unpaid cap.
+    expect(findFirst.mock.calls[0][0]).toMatchObject({ where: { key: { equals: "paylater:user-1:free" } } });
+    expect(deleteMany).toHaveBeenCalledWith({ where: { id: 7n } });
   });
 });

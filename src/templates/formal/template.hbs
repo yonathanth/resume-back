@@ -20,7 +20,7 @@
           {{#each contacts}}
             <span class="info">
               <span class="info-tag">{{#if (eq kind "email")}}E-mail{{else if (eq kind "phone")}}Telephone{{else if (eq kind "location")}}Residence{{else if label}}{{label}}{{else}}Web{{/if}}</span>
-              {{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}
+              {{#if href}}<a href="{{href}}"{{#if embedded}} class="link-embedded"{{/if}}>{{text}}</a>{{else}}{{text}}{{/if}}
             </span>
           {{/each}}
         </p>

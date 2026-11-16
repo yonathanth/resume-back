@@ -48,7 +48,7 @@
       {{#if contacts.length}}
         <ul class="contacts">
           {{#each contacts}}
-            <li class="contact c-{{kind}}">{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</li>
+            <li class="contact c-{{kind}}">{{#if href}}<a href="{{href}}"{{#if embedded}} class="link-embedded"{{/if}}>{{text}}</a>{{else}}{{text}}{{/if}}</li>
           {{/each}}
         </ul>
       {{/if}}

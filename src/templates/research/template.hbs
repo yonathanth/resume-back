@@ -17,7 +17,7 @@
         </div>
         <div class="head-right">
           {{#each contacts}}
-            {{#unless (eq kind "location")}}<div>{{#if href}}<a href="{{href}}">{{text}}</a>{{else}}{{text}}{{/if}}</div>{{/unless}}
+            {{#unless (eq kind "location")}}<div>{{#if href}}<a href="{{href}}"{{#if embedded}} class="link-embedded"{{/if}}>{{text}}</a>{{else}}{{text}}{{/if}}</div>{{/unless}}
           {{/each}}
         </div>
       </div>

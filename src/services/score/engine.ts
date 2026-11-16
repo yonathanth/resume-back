@@ -13,14 +13,23 @@
  * Two scores, each out of 100:
  *   - CV quality — completeness (30), impact (35), writing & ATS (20), skills (15).
  *     Optional sections (projects, awards…) never cost points for being absent;
- *     only half-filled entries in them do.
+ *     only half-filled entries in them do. Most checks are ratios ("each role
+ *     has 3 bullets"), so a thin CV could pass them all: quality is also capped
+ *     by how much content there is (50 with almost none, 100 from 250 words).
  *   - Job match — only when the CV has a job: required skills (45), nice-to-have
  *     skills (15), skills shown in the work (10), keywords (10), headline (15),
  *     seniority (5).
  * The overall `total` is the quality score, or 60% quality + 40% job match.
  */
 
-export const SCORE_RULES_VERSION = "2.0";
+export const SCORE_RULES_VERSION = "2.1";
+
+/** Words of content at which the depth cap lifts (and the "Overall length" check passes). */
+const FULL_DEPTH_WORDS = 250;
+/** The highest quality score a CV with (almost) no content can reach. */
+const MIN_DEPTH_CAP = 50;
+/** Bullets across all roles for full credit on "Depth of experience". */
+const DEPTH_BULLETS = 6;
 
 /** How much each score counts toward the overall total when the CV has a job. */
 export const QUALITY_WEIGHT = 0.6;
@@ -124,6 +133,8 @@ export interface CvScore {
   total: number;
   /** CV quality, out of 100 — independent of any job. */
   quality: number;
+  /** Set when quality was held down by how little content the CV has: the cap, and the words it has. */
+  depthCap?: { max: number; words: number; target: number };
   /** Job match, out of 100 — only when the CV has a job. */
   job?: number;
   version: string;
@@ -431,8 +442,8 @@ export function scoreCv(
     "email",
     "Add a valid email address."
   );
-  contact("contact.phone", "Phone number", 2, str(personal.phone).replace(/\D/g, "").length >= 7, "phone", "Add a phone number.");
-  contact("contact.location", "Location", 1.5, !blank(personal.location), "location", "Add your city and country.");
+  contact("contact.phone", "Phone number", 3, str(personal.phone).replace(/\D/g, "").length >= 7, "phone", "Add a phone number.");
+  contact("contact.location", "Location", 1, !blank(personal.location), "location", "Add your city and country.");
   contact("contact.headline", "Headline", 1.5, !blank(personal.title), "headline", "Add a headline, e.g. your target job title.");
   contact(
     "contact.link",
@@ -446,7 +457,7 @@ export function scoreCv(
     id: "summary.present",
     category: "completeness",
     label: "Professional summary",
-    max: 4,
+    max: 3.5,
     ratio: summary ? 1 : 0,
     kind: "missing",
     message: "Add a 2–4 sentence summary of who you are and what you're best at.",
@@ -458,7 +469,7 @@ export function scoreCv(
     id: "experience.present",
     category: "completeness",
     label: "Work experience",
-    max: 5,
+    max: 4,
     ratio: experience.length > 0 ? 1 : 0,
     kind: "missing",
     message: "Add at least one role.",
@@ -473,7 +484,7 @@ export function scoreCv(
     id: "experience.complete",
     category: "completeness",
     label: "Role details",
-    max: 4,
+    max: 5,
     ratio: experience.length ? (experience.length - incompleteCount) / experience.length : 0,
     kind: "missing",
     message: experience.length
@@ -550,7 +561,7 @@ export function scoreCv(
     id: "experience.bulletCount",
     category: "impact",
     label: "Bullets per role",
-    max: 10,
+    max: 7,
     ratio: roleBullets.length ? roleBullets.reduce((sum, b) => sum + Math.min(b.length, 3) / 3, 0) / roleBullets.length : 0,
     // A role with no bullets at all is something to add, not something to reword.
     kind: emptyRole >= 0 || roleBullets.length === 0 ? "missing" : "improve",
@@ -565,13 +576,30 @@ export function scoreCv(
     fix: emptyRole >= 0 || roleBullets.length === 0 ? "manual" : "ai",
     polish: thinRole >= 0 ? { kind: "bullets", index: thinRole } : undefined,
   });
+  // The ratio checks above and below can't tell one tidy role from a career: this one counts.
+  add({
+    id: "experience.depth",
+    category: "impact",
+    label: "Depth of experience",
+    max: 8,
+    ratio: Math.min(allBullets.length, DEPTH_BULLETS) / DEPTH_BULLETS,
+    // Coaching on what to write — the paid breakdown. Everyone sees the depth cap it explains.
+    kind: "improve",
+    message:
+      allBullets.length === 0
+        ? `Add your roles with at least ${DEPTH_BULLETS} bullet points between them.`
+        : `Your experience has ${plural(allBullets.length, "bullet", "bullets")}. Aim for at least ${DEPTH_BULLETS} across your roles: more of what you did and what changed because of it.`,
+    section: "experience",
+    index: thinRole >= 0 ? thinRole : undefined,
+    fix: "manual",
+  });
   const quantified = allBullets.filter(hasNumber).length;
   const unquantifiedRole = roleBullets.findIndex((bs) => bs.length > 0 && !bs.some(hasNumber));
   add({
     id: "experience.quantified",
     category: "impact",
     label: "Measurable results",
-    max: 12,
+    max: 10,
     ratio: allBullets.length ? quantified / allBullets.length / 0.4 : 0,
     kind: "improve",
     message:
@@ -589,7 +617,7 @@ export function scoreCv(
     id: "experience.actionVerbs",
     category: "impact",
     label: "Action verbs",
-    max: 8,
+    max: 6,
     ratio: allBullets.length ? allBullets.filter(verbStart).length / allBullets.length : 0,
     kind: "improve",
     message: `${plural(allBullets.filter((b) => !verbStart(b)).length, "bullet doesn't", "bullets don't")} start with a strong action verb (Led, Built, Reduced…).`,
@@ -607,7 +635,7 @@ export function scoreCv(
     id: "experience.bulletLength",
     category: "impact",
     label: "Bullet length",
-    max: 5,
+    max: 4,
     ratio: allBullets.length ? allBullets.filter(goodLength).length / allBullets.length : 0,
     kind: "improve",
     message: `${plural(allBullets.filter((b) => !goodLength(b)).length, "bullet is", "bullets are")} too short or too long. Aim for 8–35 words each.`,
@@ -642,7 +670,7 @@ export function scoreCv(
     id: "summary.voice",
     category: "writing",
     label: "Summary voice",
-    max: 3,
+    max: 2,
     ratio: summary ? 1 - summaryIssues / 2 : 0,
     kind: "improve",
     message: summary
@@ -676,7 +704,7 @@ export function scoreCv(
     id: "writing.firstPerson",
     category: "writing",
     label: "No first person in bullets",
-    max: 3,
+    max: 2,
     ratio: allBullets.length ? 1 - firstPersonBullets / allBullets.length : 0,
     kind: "improve",
     message: allBullets.length
@@ -722,12 +750,13 @@ export function scoreCv(
     id: "writing.length",
     category: "writing",
     label: "Overall length",
-    max: 3,
-    ratio: lengthRatio(totalWords, 250, 1000),
+    max: 5,
+    ratio: lengthRatio(totalWords, FULL_DEPTH_WORDS, 1000),
+    // Coaching on what to write — the paid breakdown. Everyone sees the depth cap it explains.
     kind: "improve",
     message:
-      totalWords < 250
-        ? `Your CV has about ${totalWords} words of content. Add more detail to reach 250+.`
+      totalWords < FULL_DEPTH_WORDS
+        ? `Your CV has about ${totalWords} words of content, which holds your score back. Add more detail to reach ${FULL_DEPTH_WORDS}+.`
         : `Your CV has about ${totalWords} words. Tighten it to 1,000 or fewer.`,
     section: "experience",
     fix: totalWords > 1000 ? "ai" : "manual",
@@ -819,7 +848,12 @@ export function scoreCv(
     polish: { kind: "skills" },
   });
 
-  const quality = toScore(sumPoints(checks));
+  // However well the checks pass, a CV with little in it can't score high.
+  const rawQuality = toScore(sumPoints(checks));
+  const depthMax =
+    totalWords >= FULL_DEPTH_WORDS ? 100 : Math.round(MIN_DEPTH_CAP + (100 - MIN_DEPTH_CAP) * (totalWords / FULL_DEPTH_WORDS));
+  const quality = Math.min(rawQuality, depthMax);
+  const depthCap = quality < rawQuality ? { max: depthMax, words: totalWords, target: FULL_DEPTH_WORDS } : undefined;
 
   // ── Job match — its own 100, only with a job ──
   let jobMatch: JobMatch | undefined;
@@ -977,6 +1011,7 @@ export function scoreCv(
     categories,
     checks,
   };
+  if (depthCap) result.depthCap = depthCap;
   if (jobScore !== undefined) result.job = jobScore;
   if (jobMatch) result.jobMatch = jobMatch;
   return result;

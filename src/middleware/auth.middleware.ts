@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../db/client";
 import { verifyAccessToken } from "../services/token.service";
 import { sendError } from "../utils/http-error";
+import { isDbUnavailable, sendDbUnavailable } from "../utils/db-errors";
 import { roleHasPermission, type Permission } from "../services/admin/permissions";
 
 declare module "fastify" {
@@ -30,7 +31,14 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
     return sendError(reply, 401, "UNAUTHORIZED", "Invalid or expired access token");
   }
 
-  const account = await prisma.user.findUnique({ where: { id: userId }, select: { status: true, role: true } });
+  let account: { status: string; role: string } | null;
+  try {
+    account = await prisma.user.findUnique({ where: { id: userId }, select: { status: true, role: true } });
+  } catch (err) {
+    // Nothing has happened yet, so the client can safely send it again.
+    if (isDbUnavailable(err)) return sendDbUnavailable(reply, { retryable: true });
+    throw err;
+  }
   if (!account) {
     return sendError(reply, 401, "UNAUTHORIZED", "User no longer exists");
   }

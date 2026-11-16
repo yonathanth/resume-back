@@ -54,7 +54,7 @@ export class ProRequiredError extends Error {
       reason === "fair_use"
         ? "You've reached this period's fair-use limit. It resets with your next billing period."
         : reason === "unpaid_cap"
-          ? "Download or delete one of your unpaid CVs before making another, or upgrade."
+          ? "Pay for one of your unpaid CVs before making another, or upgrade."
           : reason === "plan_limit"
             ? "You've used this period's limit for this on your plan. Upgrade to Pro, or pay for this CV at download."
             : "Your free CV is used. Upgrade, or pay for this CV when you download it."
@@ -104,6 +104,60 @@ export interface GenerationCharge {
 }
 
 /** CVs this user made with "pay later" that are still locked for them now. */
+// Pay-later starts, counted when they happen. The unpaid cap used to count only
+// the locked CVs that still exist, so deleting one freed its slot: generate,
+// copy the text, delete, repeat — unlimited AI CVs on the house. Each start is
+// now a row (in RateLimitHit, so no new table) that only a refund (the AI
+// failed) or a payment takes back; deleting the CV doesn't. Keyed by the
+// lock's tier, so starts made on Free don't count against a later Plus plan.
+const PAY_LATER_PREFIX = "paylater:";
+export const PAY_LATER_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+const payLaterKey = (userId: string, tier: PlanTier) => `${PAY_LATER_PREFIX}${userId}:${tier}`;
+const payLaterSince = () => new Date(Date.now() - PAY_LATER_WINDOW_MS);
+const PLAN_TIERS = Object.keys(TIER_RANK) as PlanTier[];
+
+async function recordPayLaterStart(userId: string, tier: PlanTier): Promise<void> {
+  await prisma.rateLimitHit.create({ data: { key: payLaterKey(userId, tier), createdAt: new Date() } });
+}
+
+/** Takes back one pay-later start: its AI call failed (refund), or a locked CV was paid for. */
+export async function releasePayLaterStart(userId: string, tier: PlanTier | null): Promise<void> {
+  const find = (key: { equals: string } | { startsWith: string }) =>
+    prisma.rateLimitHit.findFirst({
+      where: { key, createdAt: { gt: payLaterSince() } },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+  // The start at this lock's tier; failing that, any of theirs (a lock can be
+  // merged up from a source CV's, so its tier may differ from the start's).
+  const hit = (tier ? await find({ equals: payLaterKey(userId, tier) }) : null) ?? (await find({ startsWith: `${PAY_LATER_PREFIX}${userId}:` }));
+  // Two releases racing for the same row: the second simply finds it gone.
+  if (hit) await prisma.rateLimitHit.deleteMany({ where: { id: hit.id } });
+}
+
+/** Pay-later starts in the window that still hold a slot at this tier (same tier rule as countUnpaidCvs). */
+async function countRecentPayLaterStarts(userId: string, tier: PlanTier): Promise<number> {
+  const keys = PLAN_TIERS.filter((t) => TIER_RANK[tier] <= TIER_RANK[t]).map((t) => payLaterKey(userId, t));
+  return prisma.rateLimitHit.count({ where: { key: { in: keys }, createdAt: { gt: payLaterSince() } } });
+}
+
+/**
+ * Slots of the unpaid cap in use: the unpaid CVs that exist, or the pay-later
+ * starts of the last 30 days that weren't paid for — whichever is more, so
+ * neither deleting a CV nor waiting out the window alone frees a slot early.
+ */
+export async function countPayLaterInUse(userId: string, tier: PlanTier): Promise<number> {
+  const [unpaid, recent] = await Promise.all([countUnpaidCvs(userId, tier), countRecentPayLaterStarts(userId, tier)]);
+  return Math.max(unpaid, recent);
+}
+
+// Drop starts older than the window so the table can't grow forever.
+setInterval(() => {
+  prisma.rateLimitHit
+    .deleteMany({ where: { key: { startsWith: PAY_LATER_PREFIX }, createdAt: { lt: payLaterSince() } } })
+    .catch((err) => console.error("[pay-later] prune failed", err));
+}, 60 * 60 * 1000).unref();
+
 export async function countUnpaidCvs(userId: string, tier: PlanTier): Promise<number> {
   const docs = await prisma.cVDocument.findMany({
     where: { userId, unlockProduct: { not: null }, unlockedAt: null },
@@ -186,9 +240,10 @@ export async function consumeGenerationOrThrow(
 
   // Past the free CV / the Plus limit: pay at download, up to the unpaid cap.
   const settings = await getSettings();
-  const canPayLater = (await countUnpaidCvs(userId, access.tier)) < settings.plans.free.unpaidCvCap;
+  const canPayLater = (await countPayLaterInUse(userId, access.tier)) < settings.plans.free.unpaidCvCap;
   const reason: PaywallReason = !canPayLater ? "unpaid_cap" : access.tier === "free" ? "free_used" : "plan_limit";
   if (options.payLater && canPayLater) {
+    await recordPayLaterStart(userId, access.tier);
     return { ...base, kind: "pay_later", charged: false, lock: { product, tier: access.tier } };
   }
   throw new ProRequiredError(flowType, reason, { tier: access.tier, canPayLater, product, price: ONE_TIME_PRICES[product] });
@@ -197,9 +252,15 @@ export async function consumeGenerationOrThrow(
 /**
  * Gives back what consumeGenerationOrThrow spent when the AI call it paid for
  * produced nothing usable (provider error, rate limit, invalid output, role
- * mismatch). No-op for pay-later, unmetered and continuation calls.
+ * mismatch). A pay-later start gives its slot of the unpaid cap back; no-op
+ * for unmetered and continuation calls.
  */
 export async function refundGeneration(userId: string, charge: GenerationCharge | undefined): Promise<void> {
+  // A pay-later start whose AI call produced nothing gives its slot back.
+  if (charge?.kind === "pay_later") {
+    await releasePayLaterStart(userId, charge.lock?.tier ?? null);
+    return;
+  }
   if (!charge?.charged) return;
   if (charge.kind === "free") {
     const field = FREE_USES_FIELD[charge.flowType];
@@ -331,6 +392,8 @@ export async function refundChargeToken(token: string, userId: string): Promise<
   const payload = readPayload(token, userId);
   if (!payload?.k || !settle(token, payload)) return false;
   const charged = payload.k === "free" || payload.k === "plan";
-  await refundGeneration(userId, { kind: payload.k, flowType: payload.f, charged, periodKey: payload.pk ?? null, lock: null });
+  // The lock travels too, so a pay-later start is given back at its tier.
+  const lock = payload.p && payload.t ? { product: payload.p, tier: payload.t } : null;
+  await refundGeneration(userId, { kind: payload.k, flowType: payload.f, charged, periodKey: payload.pk ?? null, lock });
   return charged;
 }

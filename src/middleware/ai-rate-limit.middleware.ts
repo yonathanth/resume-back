@@ -5,6 +5,7 @@ import { resolveAccess } from "../services/access.service";
 import { recordAiUsage, type AiOperation } from "../services/ai/usage";
 import { prisma } from "../db/client";
 import { takeRateLimit } from "../utils/rate-limit";
+import { isDbUnavailable, sendDbUnavailable } from "../utils/db-errors";
 
 // Per-user caps on AI calls, independent of the free-generation quota: they
 // protect the AI provider's token budget (and our bill) from a single user
@@ -81,7 +82,14 @@ export function sendAiRefusal(reply: FastifyReply, result: Exclude<AiCallResult,
 /** preHandler for routes that always call the AI. Must run after requireAuth. */
 export function aiRateLimitFor(operation: AiOperation) {
   return async function aiRateLimit(request: FastifyRequest, reply: FastifyReply) {
-    const result = await takeAiCall(request.userId, operation);
+    let result: AiCallResult;
+    try {
+      result = await takeAiCall(request.userId, operation);
+    } catch (err) {
+      // The check failed before the route ran (no charge, no AI call), so a retry is safe.
+      if (isDbUnavailable(err)) return sendDbUnavailable(reply, { retryable: true });
+      throw err;
+    }
     if (!result.ok) return sendAiRefusal(reply, result);
   };
 }
