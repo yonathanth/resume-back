@@ -3,28 +3,28 @@ import { z } from "zod";
 import { prisma } from "../../db/client";
 import { requirePermission } from "../../middleware/auth.middleware";
 import { billingProUserFilter, noBillingProUserFilter, proUserFilter } from "../../services/notification.service";
-import { polarRevenue } from "../../services/polar/admin.service";
+import { dodoRevenue } from "../../services/dodo/admin.service";
 import { daysAgo, parseOr400 } from "./helpers";
 
 // The dashboard's numbers. Each block says where it comes from:
 //   database   — counted from gomoxie's own tables right now
-//   polar_api  — fetched live from Polar (can be unavailable)
+//   dodo_api   — fetched live from Dodo Payments (can be unavailable)
 //   tracked    — only covers events recorded since tracking was added
 // Nothing is estimated or filled in when a source has no data.
 
 const query = z.object({ days: z.coerce.number().int().min(1).max(365).default(30) });
 
-const POLAR_TIMEOUT_MS = 8000;
+const DODO_TIMEOUT_MS = 8000;
 
-async function polarRevenueWithTimeout(from: Date, to: Date) {
+async function dodoRevenueWithTimeout(from: Date, to: Date) {
   try {
     const result = await Promise.race([
-      polarRevenue(from, to),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Polar didn't answer in time")), POLAR_TIMEOUT_MS)),
+      dodoRevenue(from, to),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Dodo didn't answer in time")), DODO_TIMEOUT_MS)),
     ]);
-    return { available: true as const, source: "polar_api" as const, ...result };
+    return { available: true as const, source: "dodo_api" as const, ...result };
   } catch (err) {
-    return { available: false as const, source: "polar_api" as const, error: err instanceof Error ? err.message : "Polar unavailable" };
+    return { available: false as const, source: "dodo_api" as const, error: err instanceof Error ? err.message : "Dodo unavailable" };
   }
 }
 
@@ -58,7 +58,7 @@ export async function adminOverviewRoutes(app: FastifyInstance) {
       signupsByDay,
       aiStatus,
       firstAiEvent,
-      polar,
+      dodo,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { createdAt: { gte: since } } }),
@@ -87,7 +87,7 @@ export async function adminOverviewRoutes(app: FastifyInstance) {
         FROM "User" WHERE "createdAt" >= ${since} GROUP BY 1 ORDER BY 1`,
       prisma.aiUsageEvent.groupBy({ by: ["status"], where: { createdAt: { gte: since } }, _count: { _all: true }, _sum: { totalTokens: true } }),
       prisma.aiUsageEvent.findFirst({ orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
-      polarRevenueWithTimeout(since, now),
+      dodoRevenueWithTimeout(since, now),
     ]);
 
     const [recentUsers, recentPayments, webhookFailures, emailFailures, aiFailures, recentAudit] = await Promise.all([
@@ -152,8 +152,8 @@ export async function adminOverviewRoutes(app: FastifyInstance) {
             successful: chapaSuccess.map((c) => ({ currency: c.currency, amount: c._sum.amount ?? 0, count: c._count._all })),
             byStatus: Object.fromEntries(chapaStatus.map((s) => [s.status, s._count._all])),
           },
-          // Amounts in minor units (cents), as Polar reports them.
-          polar,
+          // Amounts in minor units (cents), as Dodo reports them.
+          dodo,
         },
         content: {
           source: "database",

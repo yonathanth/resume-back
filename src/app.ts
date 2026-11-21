@@ -23,6 +23,7 @@ import { occupationRoutes } from "./routes/occupation.routes";
 import { notificationRoutes } from "./routes/notification.routes";
 import { activationRoutes } from "./routes/activation.routes";
 import { adminRoutes } from "./routes/admin";
+import { partnerRoutes, partnerScoreRoutes } from "./routes/partner.routes";
 import { closeRenderBrowser } from "./services/render.service";
 import { isDbUnavailable, sendDbUnavailable } from "./utils/db-errors";
 
@@ -42,7 +43,7 @@ export async function buildServer(options: { logger?: boolean } = {}) {
   await app.register(multipart, {
     limits: { fileSize: env.MAX_UPLOAD_MB * 1024 * 1024 },
   });
-  // Only the Chapa and Polar webhook routes opt in (`config: { rawBody: true }`)
+  // Only the Chapa and Dodo webhook routes opt in (`config: { rawBody: true }`)
   // — needed to verify their signatures against the exact raw bytes.
   await app.register(rawBody, { global: false });
 
@@ -78,6 +79,8 @@ export async function buildServer(options: { logger?: boolean } = {}) {
   await app.register(notificationRoutes);
   await app.register(activationRoutes);
   await app.register(adminRoutes);
+  await app.register(partnerRoutes);
+  await app.register(partnerScoreRoutes);
 
   if (env.NODE_ENV !== "production") {
     await app.register(aiTestRoutes);

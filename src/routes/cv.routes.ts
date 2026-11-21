@@ -48,7 +48,7 @@ import {
   type GenerationCharge,
 } from "../services/entitlement.service";
 import { resolveAccess } from "../services/access.service";
-import { ONE_TIME_PRICES } from "../services/polar/plans";
+import { ONE_TIME_PRICES } from "../services/billing/plans";
 import { getOwnedProfile, ProfileError } from "../services/profile.service";
 import { validateGeneratedCv } from "../services/ai/cv/generation/validateGeneratedCv";
 import { getProfileDefaults } from "../services/profileDefaults.service";

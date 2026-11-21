@@ -1,12 +1,13 @@
 import { z } from "zod";
-import { BILLING_PERIODS, PAID_TIERS } from "../services/polar/plans";
+import { BILLING_PERIODS, PAID_TIERS } from "../services/billing/plans";
 
 // `provider` and the old `plan` (= billing period) are still accepted so an
-// older client keeps working: a bare `plan` means Plus. Chapa is no longer
-// offered in the app, but its backend path is kept for existing links.
+// older client keeps working: a bare `plan` means Plus, and "polar" (the
+// retired provider) means Dodo. Chapa is no longer offered in the app, but
+// its backend path is kept for existing links.
 export const checkoutSchema = z
   .object({
-    provider: z.enum(["polar", "chapa"]).default("polar"),
+    provider: z.enum(["dodo", "polar", "chapa"]).default("dodo"),
     tier: z.enum(PAID_TIERS).default("plus"),
     period: z.enum(BILLING_PERIODS).optional(),
     plan: z.enum(BILLING_PERIODS).optional(),

@@ -10,12 +10,13 @@ import { prisma } from "../db/client";
 // have no cascade and are removed explicitly in the same transaction. The
 // admin audit log keeps its own record of the deletion.
 
-// A Polar subscription that will still renew — deleting the account would
-// orphan it and keep billing the customer.
-export function hasRenewingPolarSubscription(user: User): boolean {
+// A Dodo subscription that will still renew — deleting the account would
+// orphan it and keep billing the customer. on_hold / past_due still retry
+// the charge, so they count too.
+export function hasRenewingSubscription(user: Pick<User, "subscriptionProvider" | "subscriptionStatus" | "subscriptionCancelAtPeriodEnd">): boolean {
   return (
-    user.subscriptionProvider === "POLAR" &&
-    (user.subscriptionStatus === "active" || user.subscriptionStatus === "trialing" || user.subscriptionStatus === "past_due") &&
+    user.subscriptionProvider === "DODO" &&
+    (user.subscriptionStatus === "active" || user.subscriptionStatus === "on_hold" || user.subscriptionStatus === "past_due") &&
     !user.subscriptionCancelAtPeriodEnd
   );
 }

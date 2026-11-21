@@ -4,15 +4,16 @@ import { prisma } from "../db/client";
 import { requireAuth } from "../middleware/auth.middleware";
 import { sendError } from "../utils/http-error";
 import { changePlanSchema, checkoutSchema } from "../schemas/subscription.schema";
-import { applySubscriptionSnapshot } from "../services/polar/subscription-sync.service";
-import { createProCheckoutUrl, PolarCheckoutError } from "../services/polar/checkout.service";
-import { getSubscriptionPlan } from "../services/polar/plans";
+import { applySubscriptionSnapshot } from "../services/dodo/subscription-sync.service";
+import { createCheckoutUrl, DodoCheckoutError } from "../services/dodo/checkout.service";
+import { DodoNotConfiguredError } from "../services/dodo/client";
+import { getSubscriptionPlan } from "../services/billing/plans";
 import {
-  cancelProSubscriptionAtPeriodEnd,
-  changeProSubscriptionProduct,
-  resumeProSubscription,
-  PolarCancelError,
-} from "../services/polar/cancel.service";
+  cancelSubscriptionAtPeriodEnd,
+  changeSubscriptionProduct,
+  resumeSubscription,
+  DodoSubscriptionError,
+} from "../services/dodo/subscription.service";
 import { initializePaymentForResource } from "../services/payment.service";
 import { PaymentProviderError } from "../services/payment";
 import { countPayLaterInUse, countUnpaidCvs, hasActiveProAccess, toEntitlementSnapshot } from "../services/entitlement.service";
@@ -77,7 +78,7 @@ async function toStatusResponse(user: User) {
 }
 
 export async function subscriptionRoutes(app: FastifyInstance) {
-  // Starts a checkout with whichever provider the user picked. Polar is a
+  // Starts a checkout with whichever provider the user picked. Dodo is a
   // real recurring subscription; Chapa (the local-market alternative, since
   // it can't auto-renew) sells a fixed 1-month Pro period per payment — see
   // payment.service.ts's grantChapaProPeriod, applied once the payment is
@@ -121,7 +122,7 @@ export async function subscriptionRoutes(app: FastifyInstance) {
     }
 
     // Already subscribed: switching plans goes through /change-plan, never a second subscription.
-    if (user.subscriptionProvider === "POLAR" && user.polarSubscriptionId && hasActiveProAccess(user)) {
+    if (user.subscriptionProvider === "DODO" && user.dodoSubscriptionId && hasActiveProAccess(user)) {
       return sendError(reply, 409, "ALREADY_SUBSCRIBED", "You already have a subscription. Change your plan instead.");
     }
 
@@ -136,15 +137,18 @@ export async function subscriptionRoutes(app: FastifyInstance) {
     }
 
     try {
-      const checkoutUrl = await createProCheckoutUrl({
-        userId: user.id,
-        email: user.email,
+      const checkoutUrl = await createCheckoutUrl({
+        user,
         productId: planDef.productId,
+        metadata: { purchaseType: "subscription", tier: planDef.tier, period: planDef.period },
       });
       return reply.send({ data: { checkoutUrl }, error: null });
     } catch (err) {
-      if (err instanceof PolarCheckoutError) {
-        request.log.error({ err }, "Polar checkout creation failed");
+      if (err instanceof DodoNotConfiguredError) {
+        return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available yet. Please try again later.");
+      }
+      if (err instanceof DodoCheckoutError) {
+        request.log.error({ err }, "Dodo checkout creation failed");
         return sendError(reply, 502, "CHECKOUT_FAILED", "Could not start the checkout. Please try again.");
       }
       throw err;
@@ -163,19 +167,18 @@ export async function subscriptionRoutes(app: FastifyInstance) {
   });
 
   // Schedules cancellation at the end of the current billing period — the
-  // subscription (and Pro access) stays active until then, nothing already
-  // paid is refunded, and Polar simply won't renew it afterward. Never an
-  // immediate revoke. Polar-only: a Chapa-granted period has nothing to
-  // cancel (it just expires), so a Chapa user never has polarSubscriptionId
-  // set and is correctly rejected here.
+  // subscription (and its access) stays active until then and Dodo simply
+  // won't renew it afterward. Never an immediate stop; refunds are handled
+  // separately (see the refund webhook). Dodo-only: a Chapa-granted period
+  // has nothing to cancel (it just expires), so it's rejected here.
   app.post("/api/v1/subscriptions/cancel", { preHandler: requireAuth }, async (request, reply) => {
     const user = await prisma.user.findUnique({ where: { id: request.userId } });
     if (!user) {
       return sendError(reply, 404, "USER_NOT_FOUND", "User not found");
     }
 
-    if (!user.polarSubscriptionId || !hasActiveProAccess(user)) {
-      return sendError(reply, 404, "NO_ACTIVE_SUBSCRIPTION", "There is no active Pro subscription to cancel");
+    if (user.subscriptionProvider !== "DODO" || !user.dodoSubscriptionId || !hasActiveProAccess(user)) {
+      return sendError(reply, 404, "NO_ACTIVE_SUBSCRIPTION", "There is no active subscription to cancel");
     }
 
     if (user.subscriptionCancelAtPeriodEnd) {
@@ -183,30 +186,27 @@ export async function subscriptionRoutes(app: FastifyInstance) {
     }
 
     try {
-      const cancelled = await cancelProSubscriptionAtPeriodEnd(user.polarSubscriptionId);
-      const updated = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          subscriptionStatus: cancelled.status,
-          subscriptionCurrentPeriodEnd: new Date(cancelled.currentPeriodEnd),
-          subscriptionCancelAtPeriodEnd: cancelled.cancelAtPeriodEnd,
-        },
-      });
+      // Same write the webhook does, so the change shows right away.
+      await applySubscriptionSnapshot(await cancelSubscriptionAtPeriodEnd(user.dodoSubscriptionId));
+      const updated = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
       return reply.send({ data: await toStatusResponse(updated), error: null });
     } catch (err) {
-      if (err instanceof PolarCancelError) {
-        request.log.error({ err }, "Polar subscription cancellation failed");
+      if (err instanceof DodoNotConfiguredError) {
+        return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available right now. Please try again later.");
+      }
+      if (err instanceof DodoSubscriptionError) {
+        request.log.error({ err }, "Dodo subscription cancellation failed");
         return sendError(reply, 502, "CANCEL_FAILED", "Could not cancel the subscription. Please try again.");
       }
       throw err;
     }
   });
 
-  // Switches an active Polar subscription to another plan (Plus / Pro) or
+  // Switches an active Dodo subscription to another plan (Plus / Pro) or
   // billing period (weekly / monthly / quarterly). The current plan ends and the new one replaces it on the same
   // subscription — prorated, never a second subscription or a double charge.
   // A Chapa period can't be changed (it's a one-off payment that just
-  // expires), so this is Polar-only like /cancel.
+  // expires), so this is Dodo-only like /cancel.
   app.post("/api/v1/subscriptions/change-plan", { preHandler: requireAuth }, async (request, reply) => {
     const parsed = changePlanSchema.safeParse(request.body ?? {});
     if (!parsed.success) {
@@ -218,7 +218,7 @@ export async function subscriptionRoutes(app: FastifyInstance) {
       return sendError(reply, 404, "USER_NOT_FOUND", "User not found");
     }
 
-    if (user.subscriptionProvider !== "POLAR" || !user.polarSubscriptionId || !hasActiveProAccess(user)) {
+    if (user.subscriptionProvider !== "DODO" || !user.dodoSubscriptionId || !hasActiveProAccess(user)) {
       return sendError(reply, 404, "NO_ACTIVE_SUBSCRIPTION", "There is no active Pro subscription to change");
     }
 
@@ -226,24 +226,27 @@ export async function subscriptionRoutes(app: FastifyInstance) {
     if (!planDef.productId) {
       return sendError(reply, 503, "PLAN_NOT_CONFIGURED", `The ${planDef.label} plan isn't available yet. Please try another plan.`);
     }
-    if (planDef.productId === user.polarProductId && !user.subscriptionCancelAtPeriodEnd) {
+    if (planDef.productId === user.dodoProductId && !user.subscriptionCancelAtPeriodEnd) {
       return reply.send({ data: await toStatusResponse(user), error: null });
     }
 
     try {
-      const updated = await changeProSubscriptionProduct(
-        user.polarSubscriptionId,
+      const updated = await changeSubscriptionProduct(
+        user.dodoSubscriptionId,
         planDef.productId,
         user.subscriptionCancelAtPeriodEnd
       );
       // Same write the webhook does, so the plan shows immediately rather
-      // than after Polar's subscription.updated event arrives.
+      // than after Dodo's subscription.plan_changed event arrives.
       await applySubscriptionSnapshot(updated);
       const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
       return reply.send({ data: await toStatusResponse(fresh), error: null });
     } catch (err) {
-      if (err instanceof PolarCancelError) {
-        request.log.error({ err }, "Polar subscription plan change failed");
+      if (err instanceof DodoNotConfiguredError) {
+        return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available right now. Please try again later.");
+      }
+      if (err instanceof DodoSubscriptionError) {
+        request.log.error({ err }, "Dodo subscription plan change failed");
         return sendError(reply, 502, "CHANGE_PLAN_FAILED", "Could not change your plan. Please try again.");
       }
       throw err;
@@ -251,7 +254,7 @@ export async function subscriptionRoutes(app: FastifyInstance) {
   });
 
   // Reverses a pending cancel-at-period-end — the subscription goes back to
-  // renewing normally at the end of the current period. Polar-only, same
+  // renewing normally at the end of the current period. Dodo-only, same
   // reasoning as /cancel.
   app.post("/api/v1/subscriptions/resume", { preHandler: requireAuth }, async (request, reply) => {
     const user = await prisma.user.findUnique({ where: { id: request.userId } });
@@ -259,8 +262,8 @@ export async function subscriptionRoutes(app: FastifyInstance) {
       return sendError(reply, 404, "USER_NOT_FOUND", "User not found");
     }
 
-    if (!user.polarSubscriptionId || !hasActiveProAccess(user)) {
-      return sendError(reply, 404, "NO_ACTIVE_SUBSCRIPTION", "There is no active Pro subscription to resume");
+    if (user.subscriptionProvider !== "DODO" || !user.dodoSubscriptionId || !hasActiveProAccess(user)) {
+      return sendError(reply, 404, "NO_ACTIVE_SUBSCRIPTION", "There is no active subscription to resume");
     }
 
     if (!user.subscriptionCancelAtPeriodEnd) {
@@ -268,19 +271,15 @@ export async function subscriptionRoutes(app: FastifyInstance) {
     }
 
     try {
-      const resumed = await resumeProSubscription(user.polarSubscriptionId);
-      const updated = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          subscriptionStatus: resumed.status,
-          subscriptionCurrentPeriodEnd: new Date(resumed.currentPeriodEnd),
-          subscriptionCancelAtPeriodEnd: resumed.cancelAtPeriodEnd,
-        },
-      });
+      await applySubscriptionSnapshot(await resumeSubscription(user.dodoSubscriptionId));
+      const updated = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
       return reply.send({ data: await toStatusResponse(updated), error: null });
     } catch (err) {
-      if (err instanceof PolarCancelError) {
-        request.log.error({ err }, "Polar subscription resume failed");
+      if (err instanceof DodoNotConfiguredError) {
+        return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available right now. Please try again later.");
+      }
+      if (err instanceof DodoSubscriptionError) {
+        request.log.error({ err }, "Dodo subscription resume failed");
         return sendError(reply, 502, "RESUME_FAILED", "Could not resume the subscription. Please try again.");
       }
       throw err;

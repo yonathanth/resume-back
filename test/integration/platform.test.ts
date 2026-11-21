@@ -138,7 +138,7 @@ describe("settings", () => {
     const res = await app.inject({ method: "GET", url: "/api/v1/admin/health", headers: bearer(admin.id) });
     expect(res.statusCode).toBe(200);
     const body = res.body;
-    for (const secret of ["test-access-secret-not-for-production", "test-polar-token", "test-groq-key", "test-chapa"]) {
+    for (const secret of ["test-access-secret-not-for-production", "test-dodo-key", "test-groq-key", "test-chapa"]) {
       expect(body).not.toContain(secret);
     }
     expect(res.json().data.database.ok).toBe(true);

@@ -255,10 +255,10 @@ describe("free-use metering", () => {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionProvider: "POLAR",
+        subscriptionProvider: "DODO",
         subscriptionStatus: "active",
         subscriptionCurrentPeriodEnd: periodEnd,
-        polarProductId: "test-plus-monthly",
+        dodoProductId: "test-plus-monthly",
         usagePeriodKey: "sub:an-old-period",
         periodCreateUses: 8,
       },
@@ -283,10 +283,10 @@ describe("free-use metering", () => {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionProvider: "POLAR",
+        subscriptionProvider: "DODO",
         subscriptionStatus: "active",
         subscriptionCurrentPeriodEnd: periodEnd,
-        polarProductId: "test-pro-monthly",
+        dodoProductId: "test-pro-monthly",
         usagePeriodKey: `sub:${periodEnd.toISOString()}`,
         periodTailorUses: 300,
       },

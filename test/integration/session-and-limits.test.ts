@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { PASSWORD, bearer, closeApp, createUser, getApp, prisma, refreshCookieFrom, resetDb } from "./helpers";
 import { createRateLimiter } from "../../src/utils/rate-limit";
 import { resumeStalledDeliveries } from "../../src/services/notification.service";
-import { applySubscriptionSnapshot } from "../../src/services/polar/subscription-sync.service";
+import { applySubscriptionSnapshot } from "../../src/services/dodo/subscription-sync.service";
 
 beforeEach(resetDb);
 afterAll(closeApp);
@@ -142,20 +142,19 @@ describe("announcement recovery", () => {
   });
 });
 
-describe("polar subscription sync", () => {
-  it("records Polar as the provider, so account deletion is guarded", async () => {
+describe("dodo subscription sync", () => {
+  it("records Dodo as the provider, so account deletion is guarded", async () => {
     const app = await getApp();
     const user = await createUser({ email: "payer@example.com" });
     await applySubscriptionSnapshot({
-      id: "sub_x",
-      customer_id: "cus_x",
+      subscription_id: "sub_x",
       product_id: "prod_x",
       status: "active",
-      current_period_end: new Date(Date.now() + 86400e3).toISOString(),
-      cancel_at_period_end: false,
-      customer: { email: "payer@example.com" },
+      next_billing_date: new Date(Date.now() + 86400e3).toISOString(),
+      cancel_at_next_billing_date: false,
+      customer: { customer_id: "cus_x", email: "payer@example.com" },
     });
-    expect((await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).subscriptionProvider).toBe("POLAR");
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).subscriptionProvider).toBe("DODO");
 
     const del = await app.inject({ method: "DELETE", url: "/api/v1/auth/me", headers: bearer(user.id), payload: { password: PASSWORD } });
     expect(del.statusCode).toBe(409);

@@ -3,16 +3,17 @@ import { prisma } from "../db/client";
 import { requireAuth } from "../middleware/auth.middleware";
 import { sendError } from "../utils/http-error";
 import { purchaseCheckoutSchema } from "../schemas/subscription.schema";
-import { getOneTimeProduct, type OneTimeProduct } from "../services/polar/plans";
-import { createProCheckoutUrl, PolarCheckoutError } from "../services/polar/checkout.service";
+import { getOneTimeProduct, type OneTimeProduct } from "../services/billing/plans";
+import { createCheckoutUrl, DodoCheckoutError } from "../services/dodo/checkout.service";
+import { DodoNotConfiguredError } from "../services/dodo/client";
 import { getPricingCatalog, lifetimeOfferStatus } from "../services/pricing.service";
 import { isCvLocked } from "../services/entitlement.service";
 import { resolveAccess } from "../services/access.service";
 
 // One-time purchases — never a subscription: Plus Lifetime, and unlocking one
 // CV's download. Fulfillment (the LIFETIME_PLUS grant, the CV's unlockedAt)
-// happens off the Polar `order.paid` webhook, not here — see webhook.routes.ts
-// and services/polar/credit-fulfillment.service.ts.
+// happens off Dodo's `payment.succeeded` webhook, not here — see webhook.routes.ts
+// and services/dodo/payment-fulfillment.service.ts.
 export async function purchaseRoutes(app: FastifyInstance) {
   // The public price list — the pricing page shows it signed out too.
   app.get("/api/v1/pricing", async (_request, reply) => {
@@ -58,16 +59,18 @@ export async function purchaseRoutes(app: FastifyInstance) {
     }
 
     try {
-      const checkoutUrl = await createProCheckoutUrl({
-        userId: user.id,
-        email: user.email,
+      const checkoutUrl = await createCheckoutUrl({
+        user,
         productId: productDef.productId,
         metadata: { purchaseType: product, ...metadata },
       });
       return reply.send({ data: { checkoutUrl }, error: null });
     } catch (err) {
-      if (err instanceof PolarCheckoutError) {
-        request.log.error({ err }, "Polar one-time checkout creation failed");
+      if (err instanceof DodoNotConfiguredError) {
+        return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available yet. Please try again later.");
+      }
+      if (err instanceof DodoCheckoutError) {
+        request.log.error({ err }, "Dodo one-time checkout creation failed");
         return sendError(reply, 502, "CHECKOUT_FAILED", "Could not start the checkout. Please try again.");
       }
       throw err;

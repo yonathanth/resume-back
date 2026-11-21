@@ -49,7 +49,7 @@ import {
   pendingEmailChange,
   startEmailChange,
 } from "../services/emailChange.service";
-import { syncPolarCustomerEmail } from "../services/polar/customer-sync.service";
+import { syncDodoCustomerEmail } from "../services/dodo/customer-sync.service";
 import { ACCOUNT_SUSPENDED_MESSAGE, requireAuth } from "../middleware/auth.middleware";
 import { canDomainReceiveMail } from "../utils/email-domain";
 import { sendError } from "../utils/http-error";
@@ -57,7 +57,7 @@ import { resolveProfessions, withMainProfession } from "../services/professions.
 import { formatPersonName } from "../utils/person-name";
 import { getSettings } from "../services/settings.service";
 import { resetPasswordWithToken, sendPasswordResetEmail } from "../services/passwordReset.service";
-import { deleteUserAccount, hasRenewingPolarSubscription } from "../services/accountDeletion.service";
+import { deleteUserAccount, hasRenewingSubscription } from "../services/accountDeletion.service";
 import { trackActiveDay, trackEvent } from "../services/events.service";
 import { fillAccountFromCv, OnboardingCvNotFoundError } from "../services/onboarding.service";
 import { recordDeletionFeedback } from "../services/feedback.service";
@@ -882,10 +882,10 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     // Billing emails follow the new address. Best effort, after the change:
-    // a Polar hiccup never undoes it, and it's logged to fix by hand.
-    const polar = await syncPolarCustomerEmail(result.user, result.user.email);
-    if (polar.result === "failed") {
-      request.log.warn({ userId: result.user.id, err: polar.error }, "Couldn't update the Polar customer's email");
+    // a Dodo hiccup never undoes it, and it's logged to fix by hand.
+    const billing = await syncDodoCustomerEmail(result.user, result.user.email);
+    if (billing.result === "failed") {
+      request.log.warn({ userId: result.user.id, err: billing.error }, "Couldn't update the Dodo customer's email");
     }
 
     return reply.send({ data: toApiUser(result.user), error: null });
@@ -951,12 +951,12 @@ export async function authRoutes(app: FastifyInstance) {
       return sendError(reply, 400, "CONFIRMATION_MISMATCH", "Type your account email to confirm");
     }
 
-    if (hasRenewingPolarSubscription(user)) {
+    if (hasRenewingSubscription(user)) {
       return sendError(
         reply,
         409,
         "ACTIVE_SUBSCRIPTION",
-        "Cancel your Pro subscription first so you aren't billed again, then delete your account"
+        "Cancel your subscription first so you aren't billed again, then delete your account"
       );
     }
 

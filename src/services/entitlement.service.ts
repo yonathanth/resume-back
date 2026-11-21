@@ -18,7 +18,7 @@ import {
   unlockProductFor,
   type CvUnlockProduct,
   type PlanTier,
-} from "./polar/plans";
+} from "./billing/plans";
 
 export { ProFeatureRequiredError, FeatureUnavailableError, assertFeatureAccess } from "./access.service";
 
@@ -63,9 +63,9 @@ export class ProRequiredError extends Error {
   }
 }
 
-type BillingUser = Pick<User, "subscriptionStatus" | "subscriptionCurrentPeriodEnd">;
+type BillingUser = Pick<User, "subscriptionStatus" | "subscriptionCurrentPeriodEnd" | "subscriptionProvider">;
 
-/** Billing-backed paid plan only (Polar/Chapa) — what cancel/resume act on. */
+/** Billing-backed paid plan only (Dodo/Chapa) — what cancel/resume act on. */
 export function hasActiveProAccess(user: BillingUser): boolean {
   return hasBillingPro(user);
 }

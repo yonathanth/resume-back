@@ -560,7 +560,7 @@ export const openApiSpecification: OpenAPIV3.Document = {
         tags: ["Auth"],
         summary: "Delete the current account",
         description:
-          "Permanently deletes the user and all their profiles, CVs, imports and payment records. Re-confirms identity with `password` (accounts with one) or `confirmEmail` (Google-only accounts). Refused while a Polar subscription is still set to renew.",
+          "Permanently deletes the user and all their profiles, CVs, imports and payment records. Re-confirms identity with `password` (accounts with one) or `confirmEmail` (Google-only accounts). Refused while a Dodo subscription is still set to renew.",
         operationId: "deleteCurrentUser",
         security: bearerAuth,
         requestBody: {
@@ -591,7 +591,7 @@ export const openApiSpecification: OpenAPIV3.Document = {
           }),
           "400": errorResponse("WRONG_PASSWORD | CONFIRMATION_MISMATCH | VALIDATION_ERROR"),
           "401": errorResponse("UNAUTHORIZED"),
-          "409": errorResponse("ACTIVE_SUBSCRIPTION — cancel the renewing Polar subscription first"),
+          "409": errorResponse("ACTIVE_SUBSCRIPTION — cancel the renewing Dodo subscription first"),
         },
       },
     },

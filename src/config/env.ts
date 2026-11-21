@@ -13,6 +13,9 @@ const envSchema = z.object({
   REFRESH_COOKIE_SAMESITE: z.enum(["strict", "lax", "none"]).optional(),
   UPLOAD_DIR: z.string().default("./uploads"),
   MAX_UPLOAD_MB: z.coerce.number().positive().default(10),
+  // Partner apps (e.g. Ethio Jobs) using the CV engine: "name:secret" pairs, comma-separated.
+  // Partners do their own users and billing; see routes/partner.routes.ts.
+  PARTNER_API_KEYS: z.string().default(""),
   PORT: z.coerce.number().positive().default(8000),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -74,36 +77,35 @@ const envSchema = z.object({
   CHAPA_WEBHOOK_SECRET: z.string().min(1, "CHAPA_WEBHOOK_SECRET is required"),
   // Chapa can't auto-renew, so this buys a fixed 1-month Pro period (see
   // entitlement.service.ts / payment.service.ts's grantChapaProPeriod) —
-  // the local-market alternative to Polar's $5/month.
+  // the local-market alternative to a card subscription.
   CV_PAYMENT_PRICE: z.coerce.number().positive().default(80),
   CV_PAYMENT_CURRENCY: z.string().default("ETB"),
-  POLAR_WEBHOOK_SECRET: z.string().min(1, "POLAR_WEBHOOK_SECRET is required"),
-  POLAR_ACCESS_TOKEN: z.string().min(1, "POLAR_ACCESS_TOKEN is required"),
-  POLAR_SERVER: z.enum(["sandbox", "production"]).default("sandbox"),
-  // Where Polar sends the customer back after checkout — mirrors
-  // CHAPA_RETURN_URL's convention. Defaults to the frontend's local dev
-  // port; override in production.
-  POLAR_CHECKOUT_RETURN_URL: z.string().default("http://localhost:3002/payment/polar/return"),
-  // Plus / Pro subscriptions (see services/polar/plans.ts) — each plan and
-  // billing period is its own Polar product. Optional so the server can boot
-  // before they're all filled in; a checkout for one that's still empty fails
-  // clearly at request time (PLAN_NOT_CONFIGURED) instead of at startup.
-  POLAR_PRODUCT_PLUS_WEEKLY_ID: z.string().optional(),
-  POLAR_PRODUCT_PLUS_MONTHLY_ID: z.string().optional(),
-  POLAR_PRODUCT_PLUS_QUARTERLY_ID: z.string().optional(),
-  POLAR_PRODUCT_PRO_WEEKLY_ID: z.string().optional(),
-  POLAR_PRODUCT_PRO_MONTHLY_ID: z.string().optional(),
-  POLAR_PRODUCT_PRO_QUARTERLY_ID: z.string().optional(),
-  // The retired single-plan products ($4.99 / $9.99 / $24.99). Their
-  // subscribers are on Plus now; kept so they're still recognized.
-  POLAR_PRODUCT_WEEKLY_ID: z.string().optional(),
-  POLAR_PRODUCT_MONTHLY_ID: z.string().optional(),
-  POLAR_PRODUCT_QUARTERLY_ID: z.string().optional(),
-  // One-time Polar products: Plus Lifetime, and unlocking one CV's download
-  // (a new CV, or a tailored / improved one) — see credit-fulfillment.service.ts.
-  POLAR_PRODUCT_PLUS_LIFETIME_ID: z.string().optional(),
-  POLAR_PRODUCT_CV_NEW_ID: z.string().optional(),
-  POLAR_PRODUCT_CV_EDIT_ID: z.string().optional(),
+  // Dodo Payments — merchant of record for card payments: Plus / Pro
+  // subscriptions and the one-time purchases (see services/dodo/). Optional
+  // so the server boots before they're filled in: a checkout then fails
+  // clearly at request time (PAYMENTS_NOT_CONFIGURED), and the webhook
+  // refuses deliveries it can't verify.
+  DODO_PAYMENTS_API_KEY: z.string().optional(),
+  // The webhook endpoint's signing secret (Dodo dashboard → Developer → Webhooks).
+  DODO_PAYMENTS_WEBHOOK_KEY: z.string().optional(),
+  DODO_PAYMENTS_ENVIRONMENT: z.enum(["test_mode", "live_mode"]).default("test_mode"),
+  // Where Dodo sends the customer back after checkout — the frontend's
+  // Dodo return page. Defaults to the local dev port; override in production.
+  DODO_CHECKOUT_RETURN_URL: z.string().default("http://localhost:3002/payment/dodo/return"),
+  // Plus / Pro subscriptions (see services/billing/plans.ts) — each plan and
+  // billing period is its own Dodo product. A checkout for one that's still
+  // empty fails with PLAN_NOT_CONFIGURED.
+  DODO_PRODUCT_PLUS_WEEKLY_ID: z.string().optional(),
+  DODO_PRODUCT_PLUS_MONTHLY_ID: z.string().optional(),
+  DODO_PRODUCT_PLUS_QUARTERLY_ID: z.string().optional(),
+  DODO_PRODUCT_PRO_WEEKLY_ID: z.string().optional(),
+  DODO_PRODUCT_PRO_MONTHLY_ID: z.string().optional(),
+  DODO_PRODUCT_PRO_QUARTERLY_ID: z.string().optional(),
+  // One-time Dodo products: Plus Lifetime, and unlocking one CV's download
+  // (a new CV, or a tailored / improved one) — see payment-fulfillment.service.ts.
+  DODO_PRODUCT_PLUS_LIFETIME_ID: z.string().optional(),
+  DODO_PRODUCT_CV_NEW_ID: z.string().optional(),
+  DODO_PRODUCT_CV_EDIT_ID: z.string().optional(),
   // Behind a proxy (Render, and Vercel forwarding /api/v1 to it): trust its
   // X-Forwarded-For, so request.ip — and every per-IP rate limit — is the
   // visitor's, not the proxy's. Leave off when the server faces the internet directly.

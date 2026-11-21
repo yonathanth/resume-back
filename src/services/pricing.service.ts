@@ -7,8 +7,8 @@ import {
   getSubscriptionPlan,
   type BillingPeriod,
   type PaidTier,
-} from "./polar/plans";
-import { countLifetimeSold } from "./polar/credit-fulfillment.service";
+} from "./billing/plans";
+import { countLifetimeSold } from "./dodo/payment-fulfillment.service";
 
 // The public price list (GET /api/v1/pricing): what the pricing page, the
 // upgrade page and every paywall render from, so they always match what the
@@ -20,7 +20,7 @@ export interface LifetimeOfferStatus {
   available: boolean;
   /** Shown on the pricing cards (enabled, seats left, not ended), even before it can be bought. */
   listed: boolean;
-  /** Its Polar product is set up, so it can be bought. */
+  /** Its Dodo product is set up, so it can be bought. */
   configured: boolean;
   /** Which limit the cards show: "Limited seats available", or a countdown to endsAt. */
   display: "seats" | "countdown";

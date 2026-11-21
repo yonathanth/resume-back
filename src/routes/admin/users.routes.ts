@@ -9,7 +9,7 @@ import { computeAccess } from "../../services/access.service";
 import { FLOW_TYPES, getSettings } from "../../services/settings.service";
 import { issueVerificationCode } from "../../services/emailVerification.service";
 import { sendPasswordResetEmail } from "../../services/passwordReset.service";
-import { deleteUserAccount, hasRenewingPolarSubscription } from "../../services/accountDeletion.service";
+import { deleteUserAccount, hasRenewingSubscription } from "../../services/accountDeletion.service";
 import { billingProUserFilter, freeUserFilter, grantOnlyProUserFilter, proUserFilter } from "../../services/notification.service";
 import { isAdminRole } from "../../services/admin/permissions";
 import { audit, isoDate, paged, pageArgs, paginationSchema, parseOr400, reasonSchema, uuidParam } from "./helpers";
@@ -52,7 +52,7 @@ const USER_LIST_SELECT = {
   freeCreateUses: true,
   freeTailorUses: true,
   freeImproveUses: true,
-  polarProductId: true,
+  dodoProductId: true,
   usagePeriodKey: true,
   periodCreateUses: true,
   periodTailorUses: true,
@@ -225,10 +225,10 @@ export async function adminUserRoutes(app: FastifyInstance) {
           status: user.subscriptionStatus,
           currentPeriodEnd: user.subscriptionCurrentPeriodEnd,
           cancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
-          polarCustomerId: user.polarCustomerId,
-          polarSubscriptionId: user.polarSubscriptionId,
-          polarProductId: user.polarProductId,
-          renewingPolar: hasRenewingPolarSubscription(user),
+          dodoCustomerId: user.dodoCustomerId,
+          dodoSubscriptionId: user.dodoSubscriptionId,
+          dodoProductId: user.dodoProductId,
+          renewingSubscription: hasRenewingSubscription(user),
         },
         entitlements: user.entitlements.map((e) => ({ ...e, active: liveIds.has(e.id) })),
         payments: payments.map((p) => ({
@@ -405,7 +405,7 @@ export async function adminUserRoutes(app: FastifyInstance) {
   });
 
   // Permanent. Same rules as a user deleting their own account (see
-  // accountDeletion.service.ts): a still-renewing Polar subscription must be
+  // accountDeletion.service.ts): a still-renewing Dodo subscription must be
   // cancelled first so the customer isn't billed for a deleted account.
   app.delete("/api/v1/admin/users/:id", { preHandler: requirePermission("users:delete") }, async (request, reply) => {
     const params = parseOr400(uuidParam, request.params, reply);
@@ -418,12 +418,12 @@ export async function adminUserRoutes(app: FastifyInstance) {
     if (body.confirmEmail.toLowerCase() !== user.email.toLowerCase()) {
       return sendError(reply, 400, "CONFIRMATION_MISMATCH", "Type the user's email exactly to confirm");
     }
-    if (hasRenewingPolarSubscription(user)) {
+    if (hasRenewingSubscription(user)) {
       return sendError(
         reply,
         409,
         "ACTIVE_SUBSCRIPTION",
-        "This user has a Polar subscription that will renew. Cancel it first (Billing → Cancel at period end), then delete the account."
+        "This user has a Dodo subscription that will renew. Cancel it first (Billing → Cancel at period end), then delete the account."
       );
     }
 

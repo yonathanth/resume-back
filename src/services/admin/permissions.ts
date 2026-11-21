@@ -13,7 +13,7 @@ export const PERMISSIONS = [
   "users:delete",
   "entitlements:write",
   "billing:read",
-  "billing:write", // Polar cancel/resume, sync and webhook retry
+  "billing:write", // Dodo cancel/resume, sync and webhook retry
   "settings:write",
   "notifications:send",
   "audit:read",

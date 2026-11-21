@@ -15,7 +15,7 @@ import {
 } from "../../services/settings.service";
 import { emailConfigStatus } from "../../services/email";
 import { isPushConfigured } from "../../services/push.service";
-import { getPolarOrganization } from "../../services/polar/admin.service";
+import { getDodoHealth } from "../../services/dodo/admin.service";
 import { currentModelName, currentProviderName } from "../../services/ai/usage";
 import { billingProUserFilter, proUserFilter } from "../../services/notification.service";
 import { audit, parseOr400 } from "./helpers";
@@ -84,8 +84,7 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
       database = { ok: false, latencyMs: null, error: err instanceof Error ? err.message.slice(0, 200) : "failed" };
     }
 
-    const polarStarted = Date.now();
-    const org = await getPolarOrganization();
+    const dodoHealth = await getDodoHealth();
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const [failedWebhooks, failedEmails, aiErrors] = await Promise.all([
       prisma.webhookEvent.count({ where: { status: { in: ["failed", "unmatched"] }, createdAt: { gte: since } } }),
@@ -101,7 +100,7 @@ export async function adminSettingsRoutes(app: FastifyInstance) {
         email: emailConfigStatus(),
         push: { configured: isPushConfigured() },
         ai: { provider: currentProviderName(), model: currentModelName(), keyConfigured: true },
-        polar: { environment: env.POLAR_SERVER, reachable: Boolean(org), organization: org?.name ?? null, latencyMs: org ? Date.now() - polarStarted : null },
+        dodo: dodoHealth,
         chapa: { configured: Boolean(env.CHAPA_SECRET_KEY), apiVersion: env.CHAPA_API_VERSION },
         google: { signInConfigured: Boolean(env.GOOGLE_CLIENT_ID), redirectConfigured: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) },
         last24h: { failedWebhooks, failedEmails, aiErrors },

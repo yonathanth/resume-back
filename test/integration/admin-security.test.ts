@@ -198,13 +198,13 @@ describe("account deletion", () => {
     expect(entry.metadata).toMatchObject({ email: "leaving@example.com", deleted: { cvCount: 1 } });
   });
 
-  it("refuses while a Polar subscription will still renew", async () => {
+  it("refuses while a Dodo subscription will still renew", async () => {
     const app = await getApp();
     const admin = await createUser({ role: "ADMIN" });
     const user = await createUser();
     await prisma.user.update({
       where: { id: user.id },
-      data: { subscriptionProvider: "POLAR", subscriptionStatus: "active", subscriptionCancelAtPeriodEnd: false, polarSubscriptionId: "sub_1" },
+      data: { subscriptionProvider: "DODO", subscriptionStatus: "active", subscriptionCancelAtPeriodEnd: false, dodoSubscriptionId: "sub_1" },
     });
     const res = await app.inject({
       method: "DELETE",

@@ -11,7 +11,7 @@ const AMOUNT_EPSILON = 0.01;
 
 // Chapa can't auto-renew, so a successful PRO_SUBSCRIPTION payment grants a
 // fixed 1-month Pro period rather than an ongoing subscription — the user
-// simply pays again (via Chapa or Polar) once it lapses. No background job
+// simply pays again (via Chapa or Dodo) once it lapses. No background job
 // is needed to expire it: entitlement.service.ts's hasActiveProAccess
 // already compares subscriptionCurrentPeriodEnd to "now" on every check.
 const CHAPA_PRO_PERIOD_DAYS = 30;

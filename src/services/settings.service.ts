@@ -91,7 +91,7 @@ const flowCount = z.number().int().min(0).max(100000);
 const flowCountsSchema = z.object({ create: flowCount, tailor: flowCount, improve: flowCount });
 export type FlowCounts = z.infer<typeof flowCountsSchema>;
 
-// The plans' numbers (prices live in Polar — see services/polar/plans.ts).
+// The plans' numbers (prices live in Dodo Payments — see services/billing/plans.ts).
 const plansSchema = z.object({
   free: z.object({
     // Free AI CVs of any kind (new, tailored, improved), downloadable for free.

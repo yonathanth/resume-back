@@ -66,29 +66,36 @@ model User {
   // background) or "never".
   profileAutoSync String @default("ask")
 
-  // gomoxie Pro subscription state. Two independent ways to grant it:
-  // Polar (real recurring subscription, synced from webhooks — see
-  // src/services/polar/subscription-sync.service.ts) or Chapa (no
+  // Paid-plan subscription state. Two independent ways to grant it:
+  // Dodo Payments (real recurring subscription, synced from webhooks — see
+  // src/services/dodo/subscription-sync.service.ts) or Chapa (no
   // recurring billing — a one-time payment grants a fixed 1-month period,
   // see payment.service.ts's grantChapaProPeriod). `subscriptionProvider`
-  // says which one currently owns these fields; the Polar-specific fields
+  // says which one currently owns these fields; the Dodo-specific fields
   // are simply unused/stale while a Chapa period is active, and vice versa.
-  subscriptionProvider String? // "POLAR" | "CHAPA"
+  // "POLAR" rows are left over from the retired Polar sandbox integration
+  // and never count as paid (see access.service.ts's hasBillingPro).
+  subscriptionProvider String? // "DODO" | "CHAPA" | "POLAR" (retired)
 
+  dodoCustomerId                String?   @unique
+  dodoSubscriptionId            String?   @unique
+  dodoProductId                 String?
+  // Retired: the Polar integration only ever ran in Polar's sandbox. Kept so
+  // no data is dropped; nothing reads or writes them any more.
   polarCustomerId               String?   @unique
   polarSubscriptionId           String?   @unique
   polarProductId                String?
-  // Mirrors Polar's own SubscriptionStatus verbatim (incomplete |
-  // incomplete_expired | trialing | active | past_due | canceled | unpaid |
-  // paused) when subscriptionProvider is "POLAR", plus "revoked" for the
-  // subscription.revoked event; always "active" while subscriptionProvider
-  // is "CHAPA" (Chapa has no other states — it either paid or didn't).
-  // Null until the user's first Pro grant of either kind.
+  // Mirrors Dodo's own subscription status verbatim (pending | active |
+  // on_hold | paused | cancelled | failed | expired | past_due) when
+  // subscriptionProvider is "DODO"; always "active" while
+  // subscriptionProvider is "CHAPA" (Chapa has no other states — it either
+  // paid or didn't). Null until the user's first paid plan of either kind.
   subscriptionStatus            String?
+  // Dodo: the next billing date — the end of the period already paid for.
   subscriptionCurrentPeriodEnd  DateTime?
-  // Only meaningful for Polar — Chapa periods never auto-renew, so this
-  // stays false there; "expired" for a Chapa grant is derived purely from
-  // subscriptionCurrentPeriodEnd having passed (see toStatusResponse).
+  // Dodo's cancel_at_next_billing_date. Chapa periods never auto-renew, so
+  // this stays false there; "expired" for a Chapa grant is derived purely
+  // from subscriptionCurrentPeriodEnd having passed (see toStatusResponse).
   subscriptionCancelAtPeriodEnd Boolean   @default(false)
 
   // Free-tier usage — one free completed flow per dashboard tab (Create,

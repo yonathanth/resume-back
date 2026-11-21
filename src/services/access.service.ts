@@ -9,7 +9,7 @@ import {
   type FlowKey,
   type Settings,
 } from "./settings.service";
-import { findSubscriptionByProductId, type BillingPeriod, type PlanTier } from "./polar/plans";
+import { findSubscriptionByProductId, type BillingPeriod, type PlanTier } from "./billing/plans";
 
 // The one place that decides what a user may do. Every backend gate
 // (generation limits, paid-only features, AI rate-limit exemptions) and the
@@ -53,7 +53,7 @@ export type AccessUser = Pick<
   | "subscriptionStatus"
   | "subscriptionCurrentPeriodEnd"
   | "subscriptionProvider"
-  | "polarProductId"
+  | "dodoProductId"
   | "freeCreateUses"
   | "freeTailorUses"
   | "freeImproveUses"
@@ -124,11 +124,15 @@ export function isGrantActive(grant: Pick<AccessGrant, "startsAt" | "expiresAt" 
   return true;
 }
 
-/** An active, unexpired paid subscription (Polar or Chapa), whatever its tier. */
+/**
+ * An active, unexpired paid subscription (Dodo or Chapa), whatever its tier.
+ * Rows left over from the retired Polar sandbox integration never count.
+ */
 export function hasBillingPro(
-  user: Pick<User, "subscriptionStatus" | "subscriptionCurrentPeriodEnd">,
+  user: Pick<User, "subscriptionStatus" | "subscriptionCurrentPeriodEnd"> & { subscriptionProvider?: string | null },
   now: Date = new Date()
 ): boolean {
+  if (user.subscriptionProvider === "POLAR") return false;
   if (user.subscriptionStatus !== ACTIVE_SUBSCRIPTION_STATUS) return false;
   if (user.subscriptionCurrentPeriodEnd && user.subscriptionCurrentPeriodEnd.getTime() < now.getTime()) return false;
   return true;
@@ -170,7 +174,7 @@ const earliest = (grants: AccessGrant[]) => [...grants].sort((a, b) => a.startsA
 function resolvePlan(user: AccessUser, grants: AccessGrant[], now: Date): PlanInfo & { billingPro: boolean } {
   const billingPro = hasBillingPro(user, now);
   const subscription = billingPro
-    ? findSubscriptionByProductId(user.polarProductId) ?? { tier: "plus" as const, period: "monthly" as const, legacy: false }
+    ? findSubscriptionByProductId(user.dodoProductId) ?? { tier: "plus" as const, period: "monthly" as const, legacy: false }
     : null;
   const proGrant = earliest(grants.filter((g) => g.kind === "PRO_ACCESS"));
   const plusGrant = earliest(grants.filter((g) => g.kind === "PLUS_ACCESS"));
@@ -306,7 +310,7 @@ export const ACCESS_USER_SELECT = {
   subscriptionStatus: true,
   subscriptionCurrentPeriodEnd: true,
   subscriptionProvider: true,
-  polarProductId: true,
+  dodoProductId: true,
   freeCreateUses: true,
   freeTailorUses: true,
   freeImproveUses: true,

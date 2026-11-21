@@ -7,7 +7,7 @@ and CORS never comes into play.
 
 ```
 browser ──► https://<app>.vercel.app ──/api/v1/*──► https://gomoxie-api.onrender.com
-                                                     (Polar / Chapa webhooks go straight here)
+                                                     (Dodo / Chapa webhooks go straight here)
 ```
 
 ## 1. API on Render
@@ -21,9 +21,9 @@ browser ──► https://<app>.vercel.app ──/api/v1/*──► https://gomo
      You'll know it after step 2 below; put a placeholder and come back.
    - `GOOGLE_CALLBACK_URL` — `https://<app>.vercel.app/api/v1/auth/google/callback`
    - `CHAPA_RETURN_URL` — `https://<app>.vercel.app/payment/chapa/return`
-   - `POLAR_CHECKOUT_RETURN_URL` — `https://<app>.vercel.app/payment/polar/return`
+   - `DODO_CHECKOUT_RETURN_URL` — `https://<app>.vercel.app/payment/dodo/return`
    - `CHAPA_WEBHOOK_URL` — `https://gomoxie-api.onrender.com/api/v1/payments/webhook/chapa`
-   - the AI, email, Google, Chapa, Polar and push keys (leave unused ones empty)
+   - the AI, email, Google, Chapa, Dodo and push keys (leave unused ones empty)
 4. Deploy. Every start runs `prisma migrate deploy` (applies new migrations,
    never resets anything), then the server.
 
@@ -49,8 +49,10 @@ already set.
 - **Google Cloud Console** → the OAuth client → Authorized redirect URIs: add
   `https://<app>.vercel.app/api/v1/auth/google/callback`; Authorized JavaScript
   origins: add `https://<app>.vercel.app`.
-- **Polar** → webhook endpoint `https://gomoxie-api.onrender.com/api/v1/webhooks/polar`
-  (same secret as `POLAR_WEBHOOK_SECRET`).
+- **Dodo Payments** → Developer → Webhooks → add endpoint
+  `https://gomoxie-api.onrender.com/api/v1/webhooks/dodo` with the `subscription.*`,
+  `payment.succeeded` and `refund.succeeded` events; its signing secret goes in
+  `DODO_PAYMENTS_WEBHOOK_KEY`.
 - **Resend**: `EMAIL_FROM` must be on a domain verified in Resend
   (`onboarding@resend.dev` only delivers to your own address).
 

@@ -56,14 +56,14 @@ No frontend variables are new. The browser never receives provider keys; the VAP
 
 ## 4. Provider configuration
 
-- **Polar access token scopes.** The billing pages read live data from Polar. The organization access token needs
-  `orders:read`, `refunds:read`, `disputes:read`, `organizations:read` and `subscriptions:read`. The existing checkout
-  and cancel features also need `checkouts:write` and `subscriptions:write`. Without these scopes the dashboard shows
-  "Polar API unavailable: insufficient_scope" instead of numbers. Refunds and disputes are handled in the Polar
-  dashboard; gomoxie links to it.
-- **Polar webhook.** Same endpoint as before (`/api/v1/webhooks/polar`). Outcomes (processed / failed / unmatched /
-  ignored) are now recorded. "Retry sync" re-fetches the subscription from Polar's API; it never replays the old
-  payload.
+- **Dodo Payments.** The billing pages read live payments, refunds and disputes from Dodo's API with
+  `DODO_PAYMENTS_API_KEY`. Dodo's lists don't return totals, so page counts there are what's been loaded so far.
+  Refunds and disputes are handled in the Dodo dashboard; a full refund automatically takes back what it paid for
+  (ends the subscription, revokes Plus Lifetime, or locks the CV again).
+- **Dodo webhook.** `/api/v1/webhooks/dodo`, subscribed to the `subscription.*`, `payment.succeeded` and
+  `refund.succeeded` events. Outcomes (processed / failed / unmatched / ignored) are recorded. A failed delivery
+  answers 500, so Dodo retries it; "Retry sync" re-fetches a subscription from Dodo's API and never replays the old
+  payload. Rows from the retired Polar integration stay in the list for reference.
 - **Email.** Resend's default limit is about 2 requests/second; announcements are throttled to match. Product
   announcements go only to verified, non-unsubscribed users, carry a one-click unsubscribe link and a
   `List-Unsubscribe` header, and are capped per send (Platform Settings).
@@ -92,4 +92,4 @@ Integration tests use `TEST_DATABASE_URL`, which defaults to `postgresql://postg
 refuse to run unless the host is localhost and the database name contains "test". To prepare that database, load the
 current schema into it, for example with
 `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script | psql <TEST_DATABASE_URL>`.
-Tests set every provider variable to dummy values, so they never send email or call Polar.
+Tests set every provider variable to dummy values, so they never send email or call Dodo (except the health check, which only gets an auth error).

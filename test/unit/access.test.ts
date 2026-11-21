@@ -14,7 +14,7 @@ import {
   mergeLocks,
   readChargeToken,
 } from "../../src/services/entitlement.service";
-import { findSubscriptionByProductId, unlockProductFor } from "../../src/services/polar/plans";
+import { findSubscriptionByProductId, unlockProductFor } from "../../src/services/billing/plans";
 
 const NOW = new Date("2026-10-13T12:00:00Z");
 const DAY = 24 * 60 * 60 * 1000;
@@ -24,7 +24,7 @@ const freeUser: AccessUser = {
   subscriptionStatus: null,
   subscriptionCurrentPeriodEnd: null,
   subscriptionProvider: null,
-  polarProductId: null,
+  dodoProductId: null,
   freeCreateUses: 0,
   freeTailorUses: 0,
   freeImproveUses: 0,
@@ -36,10 +36,10 @@ const freeUser: AccessUser = {
 
 const subscribed = (productId: string | null, periodEnd = at(10)): AccessUser => ({
   ...freeUser,
-  subscriptionProvider: "POLAR",
+  subscriptionProvider: "DODO",
   subscriptionStatus: "active",
   subscriptionCurrentPeriodEnd: periodEnd,
-  polarProductId: productId,
+  dodoProductId: productId,
 });
 
 let n = 0;
@@ -71,10 +71,9 @@ describe("isGrantActive", () => {
 });
 
 describe("plans catalog", () => {
-  it("recognizes Plus, Pro and the retired products (now Plus)", () => {
+  it("recognizes the Plus and Pro products", () => {
     expect(findSubscriptionByProductId("test-pro-monthly")).toEqual({ tier: "pro", period: "monthly", legacy: false });
     expect(findSubscriptionByProductId("test-plus-monthly")).toEqual({ tier: "plus", period: "monthly", legacy: false });
-    expect(findSubscriptionByProductId("test-legacy-monthly")).toEqual({ tier: "plus", period: "monthly", legacy: true });
     expect(findSubscriptionByProductId("nope")).toBeNull();
   });
   it("prices a pay-later CV as new unless it reworks an existing one", () => {
@@ -116,10 +115,13 @@ describe("computeAccess — tiers", () => {
     expect(access.features.careerProfiles).toBe(true);
   });
 
-  it("subscribers on the retired products, and unknown paid products, are on Plus", () => {
-    expect(computeAccess(subscribed("test-legacy-monthly"), [], settings, NOW)).toMatchObject({ tier: "plus", plan: { legacy: true } });
+  it("unknown paid products are on Plus", () => {
     expect(computeAccess(subscribed("unknown"), [], settings, NOW).tier).toBe("plus");
     expect(computeAccess({ ...subscribed(null), subscriptionProvider: "CHAPA" }, [], settings, NOW).tier).toBe("plus");
+  });
+
+  it("leftover Polar sandbox subscriptions don't give paid access", () => {
+    expect(computeAccess({ ...subscribed("test-pro-monthly"), subscriptionProvider: "POLAR" }, [], settings, NOW).tier).toBe("free");
   });
 
   it("a subscription past its period end, or canceled, gives nothing", () => {

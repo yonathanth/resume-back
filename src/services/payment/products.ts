@@ -1,7 +1,7 @@
 import { env } from "../../config/env";
 
 // The catalog of things Chapa sells. gomoxie Pro itself is also sellable via
-// Polar (a separate, subscription-native integration — see services/polar/)
+// Dodo Payments (a separate, subscription-native integration — see services/dodo/)
 // — this catalog exists only for products that go through Chapa's one-time
 // checkout+webhook flow. "PRO_SUBSCRIPTION" here means a single 1-month
 // Chapa-paid Pro period (see payment.service.ts's grantChapaProPeriod), not

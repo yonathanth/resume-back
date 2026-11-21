@@ -1,8 +1,8 @@
 import { env } from "../../config/env";
 import type { FlowKey } from "../settings.service";
 
-// What gomoxie sells. Prices live in Polar (each plan + billing period is its
-// own Polar product); the copies here are only for display, and must match.
+// What gomoxie sells. Prices live in Dodo Payments (each plan + billing period
+// is its own Dodo product); the copies here are only for display, and must match.
 //
 //   Free — one free AI CV (any kind), then pay per CV at download.
 //   Plus — monthly-style limits per billing period (admin-editable, see the
@@ -36,7 +36,7 @@ const TIER_LABEL: Record<PaidTier, string> = { plus: "Plus", pro: "Pro" };
 export interface SubscriptionPlanDefinition {
   tier: PaidTier;
   period: BillingPeriod;
-  /** undefined until the real Polar product id is filled into .env. */
+  /** undefined until the real Dodo product id is filled into .env. */
   productId: string | undefined;
   label: string;
   price: number;
@@ -45,14 +45,14 @@ export interface SubscriptionPlanDefinition {
 function subscriptionProductId(tier: PaidTier, period: BillingPeriod): string | undefined {
   const ids: Record<PaidTier, Record<BillingPeriod, string | undefined>> = {
     plus: {
-      weekly: env.POLAR_PRODUCT_PLUS_WEEKLY_ID,
-      monthly: env.POLAR_PRODUCT_PLUS_MONTHLY_ID,
-      quarterly: env.POLAR_PRODUCT_PLUS_QUARTERLY_ID,
+      weekly: env.DODO_PRODUCT_PLUS_WEEKLY_ID,
+      monthly: env.DODO_PRODUCT_PLUS_MONTHLY_ID,
+      quarterly: env.DODO_PRODUCT_PLUS_QUARTERLY_ID,
     },
     pro: {
-      weekly: env.POLAR_PRODUCT_PRO_WEEKLY_ID,
-      monthly: env.POLAR_PRODUCT_PRO_MONTHLY_ID,
-      quarterly: env.POLAR_PRODUCT_PRO_QUARTERLY_ID,
+      weekly: env.DODO_PRODUCT_PRO_WEEKLY_ID,
+      monthly: env.DODO_PRODUCT_PRO_MONTHLY_ID,
+      quarterly: env.DODO_PRODUCT_PRO_QUARTERLY_ID,
     },
   };
   return ids[tier][period] || undefined;
@@ -68,17 +68,11 @@ export function getSubscriptionPlan(tier: PaidTier, period: BillingPeriod): Subs
   };
 }
 
-/** The retired single-plan products — their subscribers are on Plus now. */
-function legacyPeriod(productId: string): BillingPeriod | null {
-  if (productId === env.POLAR_PRODUCT_WEEKLY_ID) return "weekly";
-  if (productId === env.POLAR_PRODUCT_MONTHLY_ID) return "monthly";
-  if (productId === env.POLAR_PRODUCT_QUARTERLY_ID) return "quarterly";
-  return null;
-}
-
 /**
- * Which plan a stored User.polarProductId is. Null when unset or unknown —
+ * Which plan a stored User.dodoProductId is. Null when unset or unknown —
  * an unknown paid product is treated as Plus Monthly by the caller.
+ * `legacy` is always false now (the retired single-plan products were
+ * Polar-only); it stays in the shape for the status response.
  */
 export function findSubscriptionByProductId(
   productId: string | null | undefined
@@ -89,8 +83,7 @@ export function findSubscriptionByProductId(
       if (subscriptionProductId(tier, period) === productId) return { tier, period, legacy: false };
     }
   }
-  const legacy = legacyPeriod(productId);
-  return legacy ? { tier: "plus", period: legacy, legacy: true } : null;
+  return null;
 }
 
 // One-time (non-recurring) products.
@@ -133,10 +126,10 @@ const ONE_TIME_LABEL: Record<OneTimeProduct, string> = {
 function oneTimeProductId(product: OneTimeProduct): string | undefined {
   const id =
     product === "plus_lifetime"
-      ? env.POLAR_PRODUCT_PLUS_LIFETIME_ID
+      ? env.DODO_PRODUCT_PLUS_LIFETIME_ID
       : product === "cv_new"
-        ? env.POLAR_PRODUCT_CV_NEW_ID
-        : env.POLAR_PRODUCT_CV_EDIT_ID;
+        ? env.DODO_PRODUCT_CV_NEW_ID
+        : env.DODO_PRODUCT_CV_EDIT_ID;
   return id || undefined;
 }
 
