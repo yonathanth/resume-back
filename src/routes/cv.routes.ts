@@ -372,7 +372,15 @@ export async function cvRoutes(app: FastifyInstance) {
             return sendError(reply, 400, "VALIDATION_ERROR", "flowType is required to start a new CV flow");
           }
           charge = await consumeGenerationOrThrow(request.userId, parsed.data.flowType, { payLater, fromExisting: true });
-          await prisma.cVDocument.update({ where: { id: doc.id }, data: chargeStampData(charge, lockOf(doc)) });
+          // Deleted since it was read just above (an abandoned flow cleaning up): give the charge back.
+          const { count } = await prisma.cVDocument.updateMany({
+            where: { id: doc.id, userId: request.userId },
+            data: chargeStampData(charge, lockOf(doc)),
+          });
+          if (count === 0) {
+            await refundGeneration(request.userId, charge);
+            return sendError(reply, 404, "CV_DOCUMENT_NOT_FOUND", "CV document not found");
+          }
           stamped = doc;
         }
       } else {
