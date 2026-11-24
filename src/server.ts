@@ -3,6 +3,7 @@ import { buildServer } from "./app";
 import { startDeliveryRecovery } from "./services/notification.service";
 import { startLifecycleEmails } from "./services/lifecycle.service";
 import { checkPdfRenderer } from "./services/render.service";
+import { warmTemplateThumbs } from "./routes/template.routes";
 
 async function start() {
   const app = await buildServer();
@@ -18,6 +19,7 @@ async function start() {
   // logs) at deploy time, not on someone's first PDF download.
   void checkPdfRenderer().then((ok) => {
     if (!ok) app.log.error("PDF renderer unavailable: Chrome could not start. PDF downloads will fail until it's fixed.");
+    else void warmTemplateThumbs(app.log);
   });
 
   // Finish announcements a previous run (or another server) left half-sent.

@@ -37,6 +37,30 @@ const fontBaseUrl = (request: FastifyRequest) => `${request.protocol}://${reques
 // Sample CVs only change with a deploy, so each template's picture is rendered once.
 const templatePreviewCache = new Map<string, Promise<Buffer>>();
 
+const templateThumbCache = new Map<string, Promise<Buffer>>();
+// Fonts from this very server, over loopback (the page is rendered here).
+const localFontBaseUrl = () => `http://127.0.0.1:${env.PORT}/api/v1/templates/fonts`;
+
+/** A template's (or landing story's) thumbnail, rendered once per process. A failed render isn't kept. */
+function templateThumb(id: string, story?: string): Promise<Buffer> {
+  const key = `${id}:${story ?? ""}`;
+  let image = templateThumbCache.get(key);
+  if (!image) {
+    const sample = story !== undefined ? (LANDING_STORIES[story] as ReturnType<typeof sampleCvFor>) : sampleCvFor(id);
+    image = renderCvToPng(sample, id, localFontBaseUrl(), { type: "webp", quality: 82 });
+    templateThumbCache.set(key, image);
+    image.catch(() => templateThumbCache.delete(key));
+  }
+  return image;
+}
+
+/** Renders every template's thumbnail in the background after start-up, so no visitor waits on Chromium. */
+export async function warmTemplateThumbs(log: { warn: (obj: unknown, msg: string) => void }) {
+  for (const id of Object.keys(CV_TEMPLATE_REGISTRY)) {
+    await templateThumb(id).catch((err) => log.warn({ err, id }, "Template thumbnail warm-up failed"));
+  }
+}
+
 export async function templateRoutes(app: FastifyInstance) {
   // The gallery: every template the backend can actually render, in gallery
   // order (the default, then the newest); clients filter by category.
@@ -77,6 +101,26 @@ export async function templateRoutes(app: FastifyInstance) {
       data: { html, persona: 0, personaCount: 1, label: sample.personal.title },
       error: null,
     });
+  });
+
+  // A template's first page as a small WebP — what every gallery and the
+  // landing page show (an <img>, not a live HTML page per card). ?story=
+  // renders one of the landing page's before/after people instead. Rendered
+  // once per template/story per process (warmed at startup) and cached by
+  // browsers for a day.
+  app.get("/api/v1/templates/:id/thumb.webp", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { story } = request.query as { story?: string };
+    if (!(id in CV_TEMPLATE_REGISTRY)) {
+      return sendError(reply, 404, "TEMPLATE_NOT_FOUND", `Unknown CV template: "${id}"`);
+    }
+    if (story !== undefined && !Object.hasOwn(LANDING_STORIES, story)) {
+      return sendError(reply, 404, "STORY_NOT_FOUND", `Unknown story: "${story}"`);
+    }
+    const image = templateThumb(id, story);
+    reply.header("Content-Type", "image/webp");
+    reply.header("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+    return reply.send(await image);
   });
 
   // A template's sample CV as a PNG (first page): the picture on its public

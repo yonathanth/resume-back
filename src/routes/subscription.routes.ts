@@ -7,10 +7,13 @@ import { changePlanSchema, checkoutSchema } from "../schemas/subscription.schema
 import { applySubscriptionSnapshot } from "../services/dodo/subscription-sync.service";
 import { createCheckoutUrl, DodoCheckoutError } from "../services/dodo/checkout.service";
 import { DodoNotConfiguredError } from "../services/dodo/client";
-import { getSubscriptionPlan } from "../services/billing/plans";
+import { findSubscriptionByProductId, getSubscriptionPlan } from "../services/billing/plans";
 import {
   cancelSubscriptionAtPeriodEnd,
   changeSubscriptionProduct,
+  getScheduledChange,
+  planChangeTiming,
+  previewUpgradeCharge,
   resumeSubscription,
   DodoSubscriptionError,
 } from "../services/dodo/subscription.service";
@@ -207,6 +210,63 @@ export async function subscriptionRoutes(app: FastifyInstance) {
   // subscription — prorated, never a second subscription or a double charge.
   // A Chapa period can't be changed (it's a one-off payment that just
   // expires), so this is Dodo-only like /cancel.
+  // What switching to a plan would do, shown before the user confirms:
+  // an upgrade is charged now (Dodo's own prorated figure), anything else
+  // waits for the renewal and charges the new plan's price then.
+  app.post("/api/v1/subscriptions/change-plan/preview", { preHandler: requireAuth }, async (request, reply) => {
+    const parsed = changePlanSchema.safeParse(request.body ?? {});
+    if (!parsed.success) {
+      return sendError(reply, 400, "VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "Invalid request body");
+    }
+    const user = await prisma.user.findUnique({ where: { id: request.userId } });
+    if (!user) return sendError(reply, 404, "USER_NOT_FOUND", "User not found");
+    if (user.subscriptionProvider !== "DODO" || !user.dodoSubscriptionId || !hasActiveProAccess(user)) {
+      return sendError(reply, 404, "NO_ACTIVE_SUBSCRIPTION", "There is no active subscription to change");
+    }
+    const planDef = getSubscriptionPlan(parsed.data.tier, parsed.data.period);
+    if (!planDef.productId) {
+      return sendError(reply, 503, "PLAN_NOT_CONFIGURED", `The ${planDef.label} plan isn't available yet. Please try another plan.`);
+    }
+    const timing = planChangeTiming(findSubscriptionByProductId(user.dodoProductId)?.tier ?? "plus", parsed.data.tier);
+    try {
+      if (timing === "now") {
+        const charge = await previewUpgradeCharge(user.dodoSubscriptionId, planDef.productId);
+        return reply.send({ data: { timing, chargeNow: charge.amount, currency: charge.currency, effectiveAt: null, renewalPrice: planDef.price }, error: null });
+      }
+      return reply.send({
+        data: { timing, chargeNow: 0, currency: null, effectiveAt: user.subscriptionCurrentPeriodEnd, renewalPrice: planDef.price },
+        error: null,
+      });
+    } catch (err) {
+      if (err instanceof DodoNotConfiguredError) {
+        return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available right now. Please try again later.");
+      }
+      if (err instanceof DodoSubscriptionError) {
+        request.log.error({ err }, "Dodo plan change preview failed");
+        return sendError(reply, 502, "CHANGE_PLAN_FAILED", "Could not work out the price of this change. Please try again.");
+      }
+      throw err;
+    }
+  });
+
+  // The plan change waiting for the next renewal, if any (read from Dodo; shown on the plans page).
+  app.get("/api/v1/subscriptions/scheduled-change", { preHandler: requireAuth }, async (request, reply) => {
+    const user = await prisma.user.findUnique({ where: { id: request.userId } });
+    if (!user?.dodoSubscriptionId || user.subscriptionProvider !== "DODO" || !hasActiveProAccess(user)) {
+      return reply.send({ data: null, error: null });
+    }
+    try {
+      const scheduled = await getScheduledChange(user.dodoSubscriptionId);
+      const plan = scheduled ? findSubscriptionByProductId(scheduled.productId) : null;
+      return reply.send({ data: scheduled && plan ? { tier: plan.tier, period: plan.period, effectiveAt: scheduled.effectiveAt } : null, error: null });
+    } catch (err) {
+      if (err instanceof DodoNotConfiguredError || err instanceof DodoSubscriptionError) {
+        return reply.send({ data: null, error: null });
+      }
+      throw err;
+    }
+  });
+
   app.post("/api/v1/subscriptions/change-plan", { preHandler: requireAuth }, async (request, reply) => {
     const parsed = changePlanSchema.safeParse(request.body ?? {});
     if (!parsed.success) {
@@ -230,17 +290,24 @@ export async function subscriptionRoutes(app: FastifyInstance) {
       return reply.send({ data: await toStatusResponse(user), error: null });
     }
 
+    const timing = planChangeTiming(findSubscriptionByProductId(user.dodoProductId)?.tier ?? "plus", parsed.data.tier);
     try {
       const updated = await changeSubscriptionProduct(
         user.dodoSubscriptionId,
         planDef.productId,
-        user.subscriptionCancelAtPeriodEnd
+        user.subscriptionCancelAtPeriodEnd,
+        timing
       );
       // Same write the webhook does, so the plan shows immediately rather
-      // than after Dodo's subscription.plan_changed event arrives.
+      // than after Dodo's subscription.plan_changed event arrives. (A change
+      // scheduled for the renewal leaves the product as it is until then.)
       await applySubscriptionSnapshot(updated);
       const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-      return reply.send({ data: await toStatusResponse(fresh), error: null });
+      const status = await toStatusResponse(fresh);
+      return reply.send({
+        data: { ...status, planChange: { timing, effectiveAt: timing === "now" ? null : fresh.subscriptionCurrentPeriodEnd } },
+        error: null,
+      });
     } catch (err) {
       if (err instanceof DodoNotConfiguredError) {
         return sendError(reply, 503, "PAYMENTS_NOT_CONFIGURED", "Payments aren't available right now. Please try again later.");

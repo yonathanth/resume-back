@@ -619,7 +619,12 @@ export async function renderCVDocumentToPdf(
  * have). `fontBaseUrl` is where this server serves template fonts. For share
  * images and other places that need a picture rather than HTML.
  */
-export async function renderCvToPng(content: unknown, templateId: string, fontBaseUrl: string): Promise<Buffer> {
+export async function renderCvToPng(
+  content: unknown,
+  templateId: string,
+  fontBaseUrl: string,
+  format: { type: "png" } | { type: "webp"; quality: number } = { type: "png" }
+): Promise<Buffer> {
   const html = await renderCvHtml(content, templateId, { mode: "thumbnail", fontBaseUrl });
 
   return withRenderSlot(async () => {
@@ -630,7 +635,7 @@ export async function renderCvToPng(content: unknown, templateId: string, fontBa
       await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
       await page.setContent(html, { waitUntil: "load" });
       await page.evaluateHandle("document.fonts.ready");
-      const png = await page.screenshot({ type: "png", clip: { x: 0, y: 0, width: 794, height: 1123 } });
+      const png = await page.screenshot({ ...format, clip: { x: 0, y: 0, width: 794, height: 1123 } });
       return Buffer.from(png);
     } finally {
       await page.close().catch(() => undefined);

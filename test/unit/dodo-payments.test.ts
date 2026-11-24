@@ -21,7 +21,7 @@ vi.mock("../../src/services/dodo/client", async (importOriginal) => ({
 }));
 
 const { fulfillOneTimePayment, reverseRefundedPayment } = await import("../../src/services/dodo/payment-fulfillment.service");
-const { cancelSubscriptionAtPeriodEnd, resumeSubscription, changeSubscriptionProduct } = await import("../../src/services/dodo/subscription.service");
+const { cancelSubscriptionAtPeriodEnd, resumeSubscription, changeSubscriptionProduct, planChangeTiming } = await import("../../src/services/dodo/subscription.service");
 const { syncDodoCustomerEmail } = await import("../../src/services/dodo/customer-sync.service");
 
 const customer = { customer_id: "cus_1", email: "jo@example.com" };
@@ -109,15 +109,31 @@ describe("managing a subscription", () => {
     expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { cancel_at_next_billing_date: false });
   });
 
-  it("changes plan in place with proration, lifting a scheduled cancellation first", async () => {
+  it("upgrades now with proration, lifting a scheduled cancellation first", async () => {
     api.subscriptions.retrieve.mockResolvedValue({ subscription_id: "sub_1" });
-    await changeSubscriptionProduct("sub_1", "test-pro-monthly", true);
+    await changeSubscriptionProduct("sub_1", "test-pro-monthly", true, "now");
     expect(api.subscriptions.update).toHaveBeenCalledWith("sub_1", { cancel_at_next_billing_date: false });
     expect(api.subscriptions.changePlan).toHaveBeenCalledWith("sub_1", {
       product_id: "test-pro-monthly",
       quantity: 1,
+      cancel_scheduled_change_plan: true,
       proration_billing_mode: "prorated_immediately",
+      effective_at: "immediately",
+      on_payment_failure: "prevent_change",
     });
+  });
+
+  it("schedules a downgrade or period change for the renewal, charging nothing now", async () => {
+    api.subscriptions.retrieve.mockResolvedValue({ subscription_id: "sub_1" });
+    await changeSubscriptionProduct("sub_1", "test-plus-monthly", false, "renewal");
+    expect(api.subscriptions.changePlan).toHaveBeenLastCalledWith("sub_1", expect.objectContaining({ effective_at: "next_billing_date" }));
+  });
+
+  it("only moving up to Pro happens now", () => {
+    expect(planChangeTiming("plus", "pro")).toBe("now");
+    expect(planChangeTiming("pro", "plus")).toBe("renewal");
+    expect(planChangeTiming("plus", "plus")).toBe("renewal");
+    expect(planChangeTiming("pro", "pro")).toBe("renewal");
   });
 
   it("wraps Dodo failures so the routes can answer 502", async () => {
